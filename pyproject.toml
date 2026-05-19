@@ -38,7 +38,7 @@ dependencies = [
     "pydirectinput>=1.0.4; sys_platform == 'win32'",
     "pynput>=1.7.6",
     "anthropic>=0.40.0",
-    "croniter>=2.0",
+    "croniter>=6.2.2",
     "pydantic>=2.5",
     "pydantic-settings>=2.1",
     "keyring>=24.0",
