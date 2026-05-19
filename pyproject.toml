@@ -71,7 +71,7 @@ dev = [
     "pre-commit>=3.7.1",
 ]
 build = [
-    "pyinstaller>=6.3",
+    "pyinstaller>=6.20.0",
 ]
 
 [project.scripts]
