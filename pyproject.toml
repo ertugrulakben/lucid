@@ -58,7 +58,7 @@ ocr = [
 ]
 omniparser = [
     "torch>=2.1",
-    "transformers>=4.40",
+    "transformers>=5.8.1",
     "ultralytics>=8.0",
 ]
 dev = [
