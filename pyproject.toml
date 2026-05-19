@@ -32,7 +32,7 @@ dependencies = [
     "mss>=9.0.1",
     "pygetwindow>=0.0.9",
     "pywin32>=306; sys_platform == 'win32'",
-    "uiautomation>=2.0.18; sys_platform == 'win32'",
+    "uiautomation>=2.0.29; sys_platform == 'win32'",
     "keyboard>=0.13.5",
     "pyautogui>=0.9.54",
     "pydirectinput>=1.0.4; sys_platform == 'win32'",
