@@ -1,0 +1,9 @@
+{
+  "name": "screenshot_describe",
+  "description": "Describe what is currently visible on screen; executes nothing, just reports.",
+  "required": [],
+  "defaults": {
+    "focus": "full screen"
+  },
+  "prompt": "Describe what is currently on screen. Focus: {{focus}}. List the active application, open windows, and important interactive elements (buttons, menus, links) as name + role + approximate location. Do NOT move the mouse or type anything — report in text only. Prefer the accessibility tree; fall back to visual cues from the screenshot when the tree is empty."
+}

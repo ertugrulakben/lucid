@@ -1,0 +1,48 @@
+# Lucid user profile (example)
+#
+# Copy this file to `data/profile.yaml` and fill in your own details.
+# Lucid feeds this context to the LLM so it can act on your behalf (e.g. knows
+# your email when composing a message, knows where your Desktop lives when
+# asked to save a file).
+#
+# This file is `.gitignore`d when named `profile.yaml`. Never commit real
+# personal data — keep `profile.example.yaml` with placeholders.
+
+name: Your Name
+email: you@example.com
+website: https://example.com
+
+# Default browser — matters when Lucid needs to launch a URL.
+# Accepts: chrome, edge, firefox, brave, opera
+default_browser: chrome
+
+# Email signature Lucid can auto-append to drafts.
+signatures:
+  email: |
+    Best regards,
+    Your Name
+
+# Folders you work in frequently. Lucid will bias file-open dialogs here.
+frequent_folders:
+  - C:\Users\YOUR_USER\Desktop
+  - C:\Users\YOUR_USER\Documents
+  - C:\Users\YOUR_USER\Downloads
+
+# Applications you use a lot — Lucid prefers these when "open a browser" etc.
+pinned_apps:
+  - chrome
+  - notepad
+  - excel
+  - word
+
+# Optional: short free-text notes you want Lucid to always know.
+# Each line can be a reminder, a URL, a shortcut, or a preference.
+notes:
+  - "Projects I work on regularly: Lucid, side-projects."
+  - "Don't close my tabs unless I say so."
+
+# Languages Lucid will use when talking back (Answer mode).
+# First one is primary. Matches OCR language stack too.
+languages:
+  - tr
+  - en

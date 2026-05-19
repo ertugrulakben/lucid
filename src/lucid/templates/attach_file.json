@@ -1,0 +1,9 @@
+{
+  "name": "attach_file",
+  "description": "Drive a currently-open Open/Save/Attach dialog to select or save a specific absolute path.",
+  "required": ["file_path"],
+  "defaults": {
+    "submit": true
+  },
+  "prompt": "A File Open / Save As / Attach dialog is currently on screen. Focus the dialog (use focus_window if needed). Use the file_dialog_paste action to paste this absolute path and, if {{submit}} is true, press Enter: {{file_path}}. If no such dialog is open, do NOT try to open one — report 'no file dialog on screen' back to the user."
+}

@@ -1,0 +1,95 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# uv
+.uv/
+uv.lock
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# PyInstaller
+*.manifest
+*.spec
+!installer/*.spec
+
+# Lucid runtime
+*.log
+logs/
+workflows/
+screenshots/
+.lucid/
+settings.local.yaml
+
+# Portable data directory (profile, memory, logs, screenshots, workflows)
+data/
+
+# User profile - keep the example, hide the real one
+profile.yaml
+!profile.example.yaml
+
+# Secrets
+.env
+.env.local
+*.pem
+*.key
+
+# Private plugins & dev notes (kept locally, not published)
+private/
+
+# Backup directories
+*.backup
+*.backup-*

@@ -1,0 +1,14 @@
+{
+  "name": "excel_new_sheet",
+  "description": "Open Excel, create a new sheet, fill given cells, optionally add a SUM formula.",
+  "required": [],
+  "defaults": {
+    "title": "New Sheet",
+    "headers": "Date,Description,Amount",
+    "rows": "",
+    "formula_cell": "",
+    "formula": "",
+    "save_path": ""
+  },
+  "prompt": "Open Excel and create a new blank workbook. Flow: Win+R → 'excel' → Enter and pick a blank workbook. Starting from cell A1, enter these headers (comma separated): {{headers}}. Fill rows using this format (each row is comma separated, rows are separated by '||'): {{rows}}. If a formula cell is requested, write it: {{formula_cell}} = {{formula}}. Use Ctrl+T to convert the range to a table when helpful. Title: {{title}}. If save_path is non-empty, save the workbook there: {{save_path}} (File → Save As → file_dialog_paste). Skip any step whose placeholder is empty."
+}

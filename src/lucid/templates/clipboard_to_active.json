@@ -1,0 +1,9 @@
+{
+  "name": "clipboard_to_active",
+  "description": "Paste the current clipboard contents into whichever application is currently focused.",
+  "required": [],
+  "defaults": {
+    "before_paste": ""
+  },
+  "prompt": "Paste whatever is on the clipboard into the currently focused window. Flow: first verify the focused window, if 'before_paste' is non-empty type that text first, then press Ctrl+V to paste the clipboard contents. Do NOT modify the clipboard. Do NOT send, save, or close anything — just paste and stop. Optional preamble text: {{before_paste}}."
+}

@@ -1,0 +1,9 @@
+{
+  "name": "chrome_new_tab_go",
+  "description": "Open Chrome if needed, create a new tab, and navigate to the given URL.",
+  "required": ["url"],
+  "defaults": {
+    "wait_seconds": 1
+  },
+  "prompt": "Open a new Chrome tab and navigate to: {{url}}. First use focus_window to switch to 'Chrome'; if no window exists, launch it via Win+R → 'chrome' → Enter. Ctrl+T opens a new tab, Ctrl+L focuses the address bar, paste the URL and press Enter. Wait roughly {{wait_seconds}} second(s) for the page to load. Never close the user's existing tabs — only open a NEW tab. Say '[done]' when finished."
+}

@@ -1,0 +1,11 @@
+{
+  "name": "send_gmail",
+  "description": "Open Gmail, compose a new email to a given recipient, and send it.",
+  "required": ["to"],
+  "defaults": {
+    "subject": "",
+    "body": "",
+    "attachment": ""
+  },
+  "prompt": "Open Gmail and send a new email to {{to}}. Subject: {{subject}}. Body: {{body}}. If the following file path is non-empty, attach it: {{attachment}}. Workflow: use focus_window to bring Chrome to the front (or launch it), Ctrl+L and go to mail.google.com. Click Compose (or use the shortcut), type the recipient in the 'To' field, Tab to Subject and type the subject, Tab to the body and type the body. If an attachment is requested, open the attach dialog with Ctrl+Shift+A and use the file_dialog_paste action with the full file path. Finally press Ctrl+Enter to send. Sending is destructive — if a confirmation modal appears, wait for the user's approval."
+}

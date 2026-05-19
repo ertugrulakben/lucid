@@ -1,0 +1,9 @@
+{
+  "name": "download_file",
+  "description": "Open a URL in the default browser and trigger the file download.",
+  "required": ["url"],
+  "defaults": {
+    "save_as": ""
+  },
+  "prompt": "Open this URL in the default browser and download the file: {{url}}. Flow: use focus_window to switch to Chrome (or launch it via Win+R → chrome → Enter), press Ctrl+L to focus the address bar, paste the URL, press Enter. When the page loads, click the download link via click_element. If the browser prompts Save As, use file_dialog_paste to save to this path: {{save_as}} (if empty, accept the default Downloads folder). Notify the user once the download has started and then stop."
+}
