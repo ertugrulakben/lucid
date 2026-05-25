@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lucid"
-version = "0.5.0"
+version = "0.6.0"
 description = "Spotlight-style desktop AI assistant with vision, teach, and autonomous control modes"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -60,6 +60,13 @@ omniparser = [
     "torch>=2.1",
     "transformers>=4.40",
     "ultralytics>=8.0",
+]
+browser = [
+    "playwright>=1.40",
+]
+mcp = [
+    "mcp>=1.0",
+    "anyio>=4.0",
 ]
 dev = [
     "pytest>=7.4",

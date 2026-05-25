@@ -55,7 +55,23 @@ toolbar-schedule = 🕘 Scheduled tasks
 toolbar-schedule-tooltip = Cron / every-N / one-shot scheduled tasks — run now or open the file.
 toolbar-actions = 📜 Actions
 toolbar-actions-tooltip = Toggle the last-10-actions panel (Execute mode debug).
+toolbar-steps = 🎞 Steps
+toolbar-steps-tooltip = Toggle the Step Gallery -- visual before/after history for this Execute run.
+toolbar-thoughts = 🧠 Thoughts
+toolbar-thoughts-tooltip = Toggle the ThoughtChain panel -- live narration + plan markers as Lucid acts.
+
+# Thought chain
+thought-empty = ThoughtChain idle.
+thought-active = ThoughtChain -- { $count } entry(ies)
+thought-clear = Clear
 toolbar-stop = ⏹ Stop  (Ctrl+Shift+K)
+
+# Step gallery
+step-gallery-empty = Step gallery -- run something in Execute mode to fill it.
+step-gallery-active = Active session: { $name }
+step-gallery-loaded = Loaded session { $name } -- { $count } step(s)
+step-detail-before = Before
+step-detail-after = After
 
 # Window controls
 window-minimize = ▁

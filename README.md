@@ -18,7 +18,7 @@ Three modes, one prompt bar (Ctrl+1/2/3 to switch, or Tab to cycle):
 | --- | --- | --- |
 | **Answer** | Vision Q&A over the current screen. No actions, just text. | "What's this error?", "Write a formula for column D", "Summarise this PDF." |
 | **Teach** | Record a task once with mouse + keyboard, save as a **named workflow** with variables. Every replay re-plans against the live screen. | Invoice creation, data entry, anything repetitive. |
-| **Execute** | Full autonomy: Claude drives the desktop. 16+ native actions — click, type, drag, focus window, click by label, file-dialog paste, screenshot to clipboard, shell peek, captcha solver. | "Open Gmail and send X to Y", "Find all PDFs and zip them", "Open Excel and fill these rows". |
+| **Execute** | Full autonomy: Claude drives the desktop. 16+ native actions — click, type, drag, focus window, click by label, file-dialog paste, screenshot to clipboard, shell peek, captcha solver. Optional: 8 Playwright browser actions and any number of MCP-bridged tools. | "Open Gmail and send X to Y", "Find all PDFs and zip them", "Open Excel and fill these rows". |
 
 ---
 
@@ -30,6 +30,15 @@ Three modes, one prompt bar (Ctrl+1/2/3 to switch, or Tab to cycle):
 git clone https://github.com/ertugrulakben/lucid
 cd lucid
 uv sync --all-extras
+```
+
+Optional extras (install on demand, not pulled by `--all-extras`):
+
+```powershell
+uv pip install -e ".[browser]"        # Playwright-backed `browser_*` actions
+python -m playwright install chromium  # one-time Chromium download
+
+uv pip install -e ".[mcp]"            # MCP bridge for external tool servers
 ```
 
 ### 2. Configure
@@ -115,11 +124,57 @@ Each new task retrieves the BM25-top-K relevant patterns and injects them as con
 For captchas on accounts you own: detect reCAPTCHA v2 / Cloudflare Turnstile / image / audio, then hierarchical solve — checkbox → image-challenge via vision → audio → user-hand-off modal. Rate-limited (10/h default), opt-in, disabled for scheduled tasks.
 
 ### Discoverable UI
-The overlay has three toolbar buttons for one-click access to the features users keep asking "where is X":
+The overlay has toolbar buttons for one-click access to the features users keep asking "where is X":
 - `📎 Attach image`
 - `💾 Workflows` (lists named workflows, click to run)
 - `🕘 Scheduled tasks` (lists, run-now, open JSON)
 - `📜 Actions` (toggle dock panel showing the last 10 Execute actions with timestamps — handy for demos and debugging)
+- `🎞 Steps` (Step Gallery — see below)
+- `🧠 Thoughts` (ThoughtChain — see below)
+
+### 🎞 Step Gallery
+Every Execute run is journalled to `data/journals/<session>/`: a pair of WebP thumbnails (before + after) per tool call plus a one-line JSON record. Toggle `🎞 Steps` in the overlay to see the live grid — three columns of cards, each clickable to open a detail dialog with the full before/after pair, the raw tool params, and the outcome text. Old sessions are pruned automatically (`settings.journal.max_sessions`, default 30). Perfect for debugging "what did Lucid actually do at step 7?" and for showing real footage of a run.
+
+### 🧠 ThoughtChain
+The model's narration and its tool-use plans land in a dedicated panel so you can read what Lucid is *thinking* without it cluttering the result pane. Streaming text appears live; every action gets a structured `🛠 plan: <action> <params>` line. Bounded history (default 200 entries) keeps the panel light during long runs.
+
+### Cursor Halo
+A tiny coloured ring flashes at the click point the moment Lucid fires a coordinate action — blue for left click, orange for right click, purple for double click, green for drag, pink for type/key. 450 ms fade, click-through, multi-monitor aware. Off in `settings.overlay.cursor_halo: false` if you don't want it during screencasts.
+
+### Browser actions (Playwright, optional extra)
+With `lucid[browser]` installed and `settings.browser.enabled: true`, the model gains a DOM-level path for web work instead of pixel-clicking through Chrome:
+
+| Action | What it does |
+| --- | --- |
+| `browser_launch` | Boot a shared Chromium context (headless or headed). |
+| `browser_goto` | Navigate to a URL (`wait_until` configurable). |
+| `browser_click_selector` | Click the first element matching a CSS/text selector. |
+| `browser_fill` | Fill an `<input>`/`<textarea>` with text. |
+| `browser_press` | Send a single key (Enter, Tab, ArrowDown, …). |
+| `browser_wait_for` | Wait until a selector reaches a given state. |
+| `browser_screenshot` | Save a PNG to `data/screenshots/`. |
+| `browser_close` | Tear the runtime down. |
+
+One shared Chromium context per Execute run; `ExecuteMode.reset()` and the tray's quit handler always close it cleanly.
+
+### MCP bridge (Model Context Protocol, optional extra)
+With `lucid[mcp]` installed and `settings.mcp.enabled: true`, Lucid spawns every server listed in `data/mcp_servers.yaml` as a stdio subprocess and registers each advertised tool as a Lucid action named `mcp_<server>_<tool>`. The model sees them next to the built-in actions in the same `computer` tool channel. Copy `mcp_servers.example.yaml` → `data/mcp_servers.yaml` and edit:
+
+```yaml
+servers:
+  - name: filesystem
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-filesystem", "C:/Users/you/Documents"]
+    enabled: true
+  - name: tavily
+    command: npx
+    args: ["-y", "mcp-tavily"]
+    env:
+      TAVILY_API_KEY: "${TAVILY_API_KEY}"
+    enabled: false
+```
+
+`${ENV_VAR}` is expanded at load time from your process environment; missing variables expand to an empty string so a leaked placeholder never ends up in the subprocess.
 
 ### Safety
 - Password fields auto-detected; screenshots suppressed for blacklisted window titles.
@@ -191,6 +246,34 @@ captcha:
 
 ocr:
   enabled: false                   # optional extra: pip install lucid[ocr]
+
+journal:
+  enabled: true                    # Step Gallery on/off
+  max_sessions: 30                 # oldest sessions pruned automatically
+  thumb_width: 480                 # WebP thumbnail width in px
+  webp_quality: 70
+
+overlay:
+  opacity: 0.78
+  dock_corner: "top-right"
+  show_thoughts: true              # ThoughtChain panel button default
+  thought_history: 200             # entries kept in the panel deque
+  cursor_halo: true                # click feedback flash
+  halo_duration_ms: 450
+  halo_radius_px: 48
+
+browser:                           # optional extra: pip install lucid[browser]
+  enabled: false
+  headless: false
+  viewport_width: 1280
+  viewport_height: 800
+  default_timeout_ms: 8000
+
+mcp:                               # optional extra: pip install lucid[mcp]
+  enabled: false
+  servers_file: "data/mcp_servers.yaml"
+  call_timeout_seconds: 30
+  initialize_timeout_seconds: 15
 ```
 
 `data/profile.yaml` — who you are, never committed:
@@ -214,12 +297,17 @@ knowledge_sources:
 ## Architecture
 
 ```
-ui/overlay.py           Spotlight frameless overlay (PySide6, LGPL)
-  └ prompt_bar          input + mode picker + attachment bar + action log
+ui/
+  ├ overlay             Spotlight frameless overlay (PySide6, LGPL)
+  ├ prompt_bar          input + mode picker + attachment bar + action log
+  ├ step_gallery        Step Gallery panel + detail dialog
+  ├ thought_chain       ThoughtChain bounded-deque viewer
+  └ cursor_halo         click-through halo flash widget
 agent/
   ├ answer_mode         vision Q&A, streaming, no actions
   ├ teach_mode          recorder → LLM summary → named workflow JSON
   └ execute_mode        plan-act loop with tool_use streaming + retry guard
+                        emits [step] / [thought] / [halo] stream prefixes
 executor/
   ├ actions             16+ native actions (click_element, file_dialog_paste, …)
   ├ retry               fingerprint + near-dup + loop detector
@@ -227,11 +315,17 @@ executor/
   ├ file_dialog         Win32 #32770 dialog automation (Ctrl+L + paste path)
   ├ safety              destructive-action modal + kill switch
   └ ocr                 EasyOCR fallback (optional extra)
+actions/
+  ├ registry            entry-point + user-plugin discovery, dispatch
+  ├ builtin/            5 desktop automation primitives
+  └ browser/            8 Playwright DOM actions (optional extra)
 capture/                mss screenshot + UIA a11y tree + window enum
 llm/                    provider abstract + anthropic_client + streaming
 backend/                api (direct SDK) + cli (Claude Code subprocess)
 scheduler/              cron/every/at/in + kernel-kill buffer + toast callback
 memory/                 SQLite (facts / files / task_patterns)
+journal/                per-session WebP + JSONL store for Step Gallery
+mcp/                    optional bridge: stdio MCP servers → Lucid actions
 recorder/               pynput-based event recorder + workflow JSON
 replayer/               semantic replay via live screen re-planning
 templates/              7 ship-in workflows (send_gmail, excel_new_sheet, …)
@@ -247,7 +341,7 @@ Everything persistent lives under `data/` at the repo root (portable — no `%AP
 PRs welcome. Before sending:
 
 ```powershell
-uv run pytest -q                   # 100+ tests, should be green
+uv run pytest -q                   # 200+ tests, should be green
 uv run ruff check src/             # style
 uv run pre-commit run --all-files  # lint + format + spelling
 ```

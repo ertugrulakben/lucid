@@ -55,7 +55,23 @@ toolbar-schedule = 🕘 Zamanlanmış görevler
 toolbar-schedule-tooltip = Cron / her N / tek seferlik görevler — şimdi çalıştır veya dosyayı aç.
 toolbar-actions = 📜 Eylemler
 toolbar-actions-tooltip = Son 10 eylem panelini aç/kapat (Yürüt modu hata ayıklama).
+toolbar-steps = 🎞 Adımlar
+toolbar-steps-tooltip = Adım Galerisi'ni aç/kapat -- bu Yürüt çalışmasının görsel önce/sonra tarihçesi.
+toolbar-thoughts = 🧠 Düşünceler
+toolbar-thoughts-tooltip = Düşünce Zinciri panelini aç/kapat -- Lucid çalışırken canlı anlatım + plan işaretleri.
+
+# Düşünce zinciri
+thought-empty = Düşünce zinciri boşta.
+thought-active = Düşünce zinciri -- { $count } kayıt
+thought-clear = Temizle
 toolbar-stop = ⏹ Durdur  (Ctrl+Shift+K)
+
+# Adım galerisi
+step-gallery-empty = Adım galerisi -- Yürüt modunda bir şey çalıştır, burası dolsun.
+step-gallery-active = Aktif oturum: { $name }
+step-gallery-loaded = Yüklü oturum { $name } -- { $count } adım
+step-detail-before = Önce
+step-detail-after = Sonra
 
 # Pencere kontrolleri
 window-minimize = ▁

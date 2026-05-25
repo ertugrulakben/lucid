@@ -1,0 +1,33 @@
+# Lucid MCP servers manifest.
+#
+# Copy this file to `data/mcp_servers.yaml` and edit the entries below.
+# Set `settings.mcp.enabled = true` in `data/settings.yaml` to wire them in.
+#
+# Each `${VAR}` in env is expanded from the process environment at load time.
+# Missing variables expand to an empty string.
+
+servers:
+  - name: filesystem
+    command: npx
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-filesystem"
+      - "C:/Users/Public/Documents"
+    enabled: true
+
+  # Example: a hosted search MCP that needs an API key.
+  - name: tavily
+    command: npx
+    args:
+      - "-y"
+      - "mcp-tavily"
+    env:
+      TAVILY_API_KEY: "${TAVILY_API_KEY}"
+    enabled: false
+
+  # Example: a local Python MCP server you wrote yourself.
+  - name: my-tools
+    command: python
+    args:
+      - "scripts/my_mcp_server.py"
+    enabled: false

@@ -137,7 +137,14 @@ def reset_for_tests() -> None:
     global _DISCOVERED
     _REGISTRY.clear()
     _DISCOVERED = False
-    for mod_name in [m for m in list(sys.modules) if m.startswith("lucid.actions.builtin")]:
+    # Drop cached action modules so their @register_action side effects fire
+    # again on the next discovery pass. We keep ``registry`` and ``schemas``
+    # since wiping them would break the calling test itself.
+    for mod_name in list(sys.modules):
+        if not mod_name.startswith("lucid.actions."):
+            continue
+        if mod_name in ("lucid.actions.registry", "lucid.actions.schemas"):
+            continue
         sys.modules.pop(mod_name, None)
 
 

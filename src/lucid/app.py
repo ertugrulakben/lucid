@@ -16,6 +16,7 @@ from lucid.capture import ContextSnapshot
 from lucid.config.settings import Settings, get_settings
 from lucid.hotkey.listener import HotkeyListener
 from lucid.i18n import _ as t
+from lucid.ui.cursor_halo import CursorHalo
 from lucid.ui.overlay import OverlayWindow
 
 log = logging.getLogger("lucid.app")
@@ -33,6 +34,33 @@ class AppController(QObject):
         self.router = ModeRouter(settings)
         self._tray: QSystemTrayIcon | None = None
         self._reopen_after_stream = False
+
+        # Reusable cursor flash widget. One instance is enough -- each flash
+        # repositions the same window. Constructed lazily in case the user
+        # turned the feature off in settings.
+        self._halo: CursorHalo | None = None
+        if getattr(settings.overlay, "cursor_halo", True):
+            self._halo = CursorHalo(
+                radius_px=getattr(settings.overlay, "halo_radius_px", 48),
+                duration_ms=getattr(settings.overlay, "halo_duration_ms", 450),
+            )
+
+        # MCP bridge -- optional. When `settings.mcp.enabled` is True and the
+        # `mcp` extra is installed, each configured server is spawned and its
+        # tools are registered into the action registry so ExecuteMode can
+        # call them just like any built-in action.
+        self._mcp_bridge = None
+        if getattr(settings.mcp, "enabled", False):
+            try:
+                from lucid.mcp import MCPBridge
+
+                if MCPBridge is not None:
+                    self._mcp_bridge = MCPBridge(settings)
+                    self._mcp_bridge.start()
+                else:
+                    log.warning("MCP enabled but mcp extra not installed; skipping")
+            except Exception as exc:
+                log.warning("MCP bridge failed to start: %s", exc)
 
         # Background scheduler — fires saved cron/one-shot tasks while the
         # tray app is up. Optional: if croniter isn't installed we skip
@@ -58,6 +86,7 @@ class AppController(QObject):
         self.overlay.run_workflow_requested.connect(self._on_run_workflow)
         self.overlay.run_schedule_requested.connect(self._on_run_schedule)
         self.overlay.open_schedule_file_requested.connect(self._on_open_schedule_file)
+        self.overlay.halo_requested.connect(self._on_halo_requested, Qt.ConnectionType.QueuedConnection)
         self.toggle_overlay.connect(self._on_toggle, Qt.ConnectionType.QueuedConnection)
 
         self.hotkey = HotkeyListener(settings.hotkey)
@@ -200,6 +229,16 @@ class AppController(QObject):
         except OSError as exc:
             self.overlay.show_error(f"schedule launch failed: {exc}")
 
+    @Slot(str, int, int)
+    def _on_halo_requested(self, action_name: str, screen_x: int, screen_y: int) -> None:
+        """Forward a stream `[halo]` event to the reusable Cursor Halo widget."""
+        if self._halo is None:
+            return
+        try:
+            self._halo.flash(action_name, screen_x, screen_y)
+        except Exception as exc:
+            log.debug("cursor halo flash failed: %s", exc)
+
     @Slot()
     def _on_open_schedule_file(self) -> None:
         """Open data/scheduled_tasks.json in the OS default editor."""
@@ -233,6 +272,23 @@ class AppController(QObject):
         self.settings = new_settings
         # Hot-swappable: overlay appearance
         self.overlay.apply_settings(new_settings)
+        # Cursor halo: re-spin the singleton so radius/duration changes apply
+        # immediately, and honour the on/off toggle without a restart.
+        want_halo = getattr(new_settings.overlay, "cursor_halo", True)
+        if want_halo and self._halo is None:
+            self._halo = CursorHalo(
+                radius_px=getattr(new_settings.overlay, "halo_radius_px", 48),
+                duration_ms=getattr(new_settings.overlay, "halo_duration_ms", 450),
+            )
+        elif want_halo and self._halo is not None:
+            self._halo.configure(
+                radius_px=getattr(new_settings.overlay, "halo_radius_px", 48),
+                duration_ms=getattr(new_settings.overlay, "halo_duration_ms", 450),
+            )
+        elif not want_halo and self._halo is not None:
+            self._halo.hide()
+            self._halo.deleteLater()
+            self._halo = None
         if new_settings.backend.mode != old_backend and self._tray is not None:
             try:
                 from PySide6.QtWidgets import QSystemTrayIcon as _T
@@ -294,6 +350,29 @@ class AppController(QObject):
                 self._scheduler.stop(timeout=3.0)
             except Exception:
                 pass
+        if self._halo is not None:
+            try:
+                self._halo.hide()
+                self._halo.deleteLater()
+            except Exception:
+                pass
+            self._halo = None
+        # Make sure the Playwright runtime is gone before the QApplication
+        # quits -- otherwise the Chromium subprocess can outlive the tray.
+        try:
+            from lucid.actions.browser.runtime import BrowserRuntime
+
+            BrowserRuntime.reset()
+        except Exception:
+            pass
+        # Tear down the MCP supervisor (its background loop + every spawned
+        # server subprocess) the same way.
+        if self._mcp_bridge is not None:
+            try:
+                self._mcp_bridge.stop()
+            except Exception as exc:
+                log.debug("MCP bridge stop failed: %s", exc)
+            self._mcp_bridge = None
 
 
 def _detach_flags() -> int:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 from PySide6.QtCore import QEvent, QRectF, Qt, Signal, Slot
 from PySide6.QtGui import (
@@ -28,9 +29,12 @@ from PySide6.QtWidgets import (
 
 from lucid.capture import ContextSnapshot
 from lucid.i18n import _ as t
+from lucid.journal.models import StepRecord
 from lucid.ui.mode_picker import ModePicker
 from lucid.ui.prompt_bar import PromptBar
+from lucid.ui.step_gallery import StepGalleryPanel
 from lucid.ui.theme import QSS_DARK
+from lucid.ui.thought_chain import ThoughtChainPanel
 
 log = logging.getLogger("lucid.ui.overlay")
 
@@ -43,6 +47,7 @@ class OverlayWindow(QWidget):
     run_workflow_requested = Signal(str)  # slug
     run_schedule_requested = Signal(str)  # slug (fires scheduled task right now)
     open_schedule_file_requested = Signal()
+    halo_requested = Signal(str, int, int)  # action_name, screen_x, screen_y
 
     def __init__(self, settings) -> None:
         super().__init__(
@@ -158,6 +163,22 @@ class OverlayWindow(QWidget):
         self.action_log_button.toggled.connect(self._on_toggle_action_log)
         status_layout.addWidget(self.action_log_button)
 
+        self.steps_button = QPushButton(t("toolbar-steps"), status_row)
+        self.steps_button.setObjectName("LucidToolbarButton")
+        self.steps_button.setFocusPolicy(self.steps_button.focusPolicy().NoFocus)
+        self.steps_button.setToolTip(t("toolbar-steps-tooltip"))
+        self.steps_button.setCheckable(True)
+        self.steps_button.toggled.connect(self._on_toggle_step_gallery)
+        status_layout.addWidget(self.steps_button)
+
+        self.thoughts_button = QPushButton(t("toolbar-thoughts"), status_row)
+        self.thoughts_button.setObjectName("LucidToolbarButton")
+        self.thoughts_button.setFocusPolicy(self.thoughts_button.focusPolicy().NoFocus)
+        self.thoughts_button.setToolTip(t("toolbar-thoughts-tooltip"))
+        self.thoughts_button.setCheckable(True)
+        self.thoughts_button.toggled.connect(self._on_toggle_thoughts)
+        status_layout.addWidget(self.thoughts_button)
+
         self.stop_button = QPushButton(t("toolbar-stop"), status_row)
         self.stop_button.setObjectName("LucidStopButton")
         self.stop_button.setFocusPolicy(self.stop_button.focusPolicy().NoFocus)
@@ -184,6 +205,25 @@ class OverlayWindow(QWidget):
         self.action_log.hide()
         layout.addWidget(self.action_log)
         self._action_log_entries: list[str] = []
+
+        # Step Gallery -- visual run history for Execute mode. Hidden by
+        # default; toggled via the 🎞 Steps button. The ExecuteMode loop
+        # emits `[step] ...` lines, append_result parses them and forwards
+        # each one to add_record so the gallery updates in real time.
+        self.step_gallery = StepGalleryPanel(self)
+        self.step_gallery.hide()
+        layout.addWidget(self.step_gallery)
+        self._current_journal_dir: Path | None = None
+
+        # ThoughtChain panel -- live reasoning view. The Execute loop emits
+        # `[thought] ...` lines (narration + structured plan markers) that
+        # append_result strips and forwards here. Hidden until the user
+        # presses the 🧠 Thoughts button.
+        self.thought_chain = ThoughtChainPanel(
+            self, history=getattr(settings.overlay, "thought_history", 200)
+        )
+        self.thought_chain.hide()
+        layout.addWidget(self.thought_chain)
 
         # Horizontal strip showing attached reference images as thumbnails.
         # Appears only when the user pastes one or more images via Ctrl+V.
@@ -488,6 +528,53 @@ class OverlayWindow(QWidget):
         self.action_log.setVisible(checked)
         self.adjustSize()
 
+    @Slot(bool)
+    def _on_toggle_step_gallery(self, checked: bool) -> None:
+        self.step_gallery.setVisible(checked)
+        self.adjustSize()
+
+    @Slot(bool)
+    def _on_toggle_thoughts(self, checked: bool) -> None:
+        self.thought_chain.setVisible(checked)
+        self.adjustSize()
+
+    def _dispatch_halo(self, payload: str) -> None:
+        """Decode a `[halo] action|x,y` line and forward to the controller."""
+        try:
+            action_part, coord_part = payload.split("|", 1)
+            sx_str, sy_str = coord_part.split(",", 1)
+            self.halo_requested.emit(action_part.strip(), int(sx_str), int(sy_str))
+        except (ValueError, TypeError) as exc:
+            log.debug("malformed [halo] payload %r: %s", payload, exc)
+
+    def _absorb_step_record(self, payload: str) -> None:
+        """Decode a `[step] session|id|action|thumb|outcome` line and update the gallery."""
+        parts = payload.split("|", 4)
+        if len(parts) < 4:
+            log.debug("malformed [step] payload: %s", payload)
+            return
+        session_str, id_str, action_name, thumb_name = parts[0], parts[1], parts[2], parts[3]
+        outcome = parts[4] if len(parts) > 4 else ""
+        try:
+            session_dir = Path(session_str)
+            record = StepRecord(
+                id=int(id_str) if id_str.isdigit() else 1,
+                ts=0.0,
+                action_name=action_name or "?",
+                params={},
+                outcome=outcome,
+                before_thumb=thumb_name or None,
+                after_thumb=thumb_name or None,
+                monitor_index=0,
+                coord=None,
+            )
+            if self._current_journal_dir != session_dir:
+                self._current_journal_dir = session_dir
+                self.step_gallery.bind_session(session_dir)
+            self.step_gallery.add_record(record, session_dir=session_dir)
+        except Exception as exc:
+            log.debug("could not bind step record: %s", exc)
+
     def append_action_log(self, line: str) -> None:
         """Push a one-line record (action + short result) into the dock.
 
@@ -578,6 +665,18 @@ class OverlayWindow(QWidget):
                 payload = stripped[len("[action-log]") :].strip()
                 if payload:
                     self.append_action_log(payload)
+            elif stripped.startswith("[step]"):
+                payload = stripped[len("[step]") :].strip()
+                if payload:
+                    self._absorb_step_record(payload)
+            elif stripped.startswith("[thought]"):
+                payload = stripped[len("[thought]") :].strip()
+                if payload:
+                    self.thought_chain.append_thought(payload)
+            elif stripped.startswith("[halo]"):
+                payload = stripped[len("[halo]") :].strip()
+                if payload:
+                    self._dispatch_halo(payload)
             else:
                 visible_parts.append(line)
         visible = "".join(visible_parts)

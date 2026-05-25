@@ -90,6 +90,17 @@ class OverlaySettings(BaseModel):
     click_through_on_dock: bool = (
         False  # Dock'tayken altındaki pencereye tıklamaya izin ver (Ctrl+Alt+T toggle)
     )
+    # ThoughtChain panel -- collapsible "live reasoning" view next to the
+    # transcript pane. Off-by-default visibility is the button state, not the
+    # capture: thoughts are always streamed; the user just chooses whether to
+    # show them.
+    show_thoughts: bool = True
+    thought_history: int = Field(default=200, ge=20, le=2000)
+    # Cursor Halo -- a brief radial flash painted at the click target right
+    # after Lucid executes a coordinate action. Pure visual cue, no input.
+    cursor_halo: bool = True
+    halo_duration_ms: int = Field(default=450, ge=100, le=2000)
+    halo_radius_px: int = Field(default=48, ge=12, le=200)
 
 
 class MemorySettings(BaseModel):
@@ -156,6 +167,53 @@ class OCRSettings(BaseModel):
     languages: list[str] = Field(default_factory=lambda: ["tr", "en"])
 
 
+class McpSettings(BaseModel):
+    """Model Context Protocol bridge.
+
+    When enabled, Lucid spawns each server listed in ``servers_file`` as a
+    stdio subprocess and registers each of its tools as a Lucid action with
+    the prefix ``mcp_<server>_<tool>``. The ExecuteMode tool list then sees
+    them next to the desktop automation actions.
+    """
+
+    enabled: bool = False
+    servers_file: Path = Field(default_factory=lambda: Path("data") / "mcp_servers.yaml")
+    call_timeout_seconds: int = Field(default=30, ge=1, le=600)
+    initialize_timeout_seconds: int = Field(default=15, ge=1, le=120)
+
+
+class BrowserSettings(BaseModel):
+    """Playwright-backed `browser_*` action group.
+
+    Disabled by default so a vanilla install never spins up a Chromium
+    instance the user didn't ask for. When enabled, the runtime launches
+    a single shared browser context that all `browser_*` actions reuse
+    until ExecuteMode resets or AppController shuts down.
+    """
+
+    enabled: bool = False
+    headless: bool = False
+    viewport_width: int = Field(default=1280, ge=320, le=4096)
+    viewport_height: int = Field(default=800, ge=240, le=4096)
+    default_timeout_ms: int = Field(default=8000, ge=500, le=120_000)
+    user_agent: str | None = None
+    locale: str = "tr-TR"
+
+
+class JournalSettings(BaseModel):
+    """Execute mode step journal: per-session before/after thumbnails on disk.
+
+    The journal is what powers the Step Gallery panel in the overlay. It also
+    survives the run, so the user can revisit a finished task and see exactly
+    what Lucid touched at each step.
+    """
+
+    enabled: bool = True
+    max_sessions: int = Field(default=30, ge=1, le=500)
+    thumb_width: int = Field(default=480, ge=120, le=1920)
+    webp_quality: int = Field(default=70, ge=10, le=100)
+
+
 class Settings(BaseModel):
     hotkey: str = "ctrl+alt+j"
     locale: str = ""  # empty -> i18n.init() resolves from env / OS / English
@@ -180,6 +238,9 @@ class Settings(BaseModel):
     grounding: GroundingSettings = GroundingSettings()
     capture: CaptureSettings = CaptureSettings()
     updater: UpdaterSettings = UpdaterSettings()
+    journal: JournalSettings = JournalSettings()
+    browser: BrowserSettings = BrowserSettings()
+    mcp: McpSettings = McpSettings()
 
     config_path: Path = Field(default_factory=lambda: _default_config_path())
     data_dir: Path = Field(default_factory=lambda: _default_data_dir())
@@ -195,6 +256,10 @@ class Settings(BaseModel):
     @property
     def workflows_dir(self) -> Path:
         return self.data_dir / "workflows"
+
+    @property
+    def journals_dir(self) -> Path:
+        return self.data_dir / "journals"
 
     @property
     def memory_db_path(self) -> Path:

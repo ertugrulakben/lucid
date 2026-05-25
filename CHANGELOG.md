@@ -2,6 +2,72 @@
 
 All notable changes to Lucid are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] — 2026-05-26
+
+Reasoning-transparency + ecosystem release. Four independent features, each
+behind its own setting flag so vanilla v0.5 installs upgrade cleanly.
+
+### Added
+
+- **Step Gallery** — visual before/after timeline for every Execute run. Each
+  tool call writes a pair of WebP thumbnails plus a one-line JSON record to
+  `data/journals/<session>/`. The overlay grows a `🎞 Steps` toggle that opens
+  a 3-column grid; clicking a cell opens a detail dialog with the full
+  before/after pair, the tool params, and the raw outcome. Old sessions are
+  pruned automatically (`settings.journal.max_sessions`, default 30).
+- **ThoughtChain panel** — live reasoning view. The Execute loop emits a
+  `[thought] ...` stream prefix carrying the LLM's narration plus a
+  structured `🛠 plan: ...` line for each tool_use block. The overlay's
+  `🧠 Thoughts` toggle opens a bounded-deque viewer that auto-scrolls.
+- **Cursor Halo** — brief radial flash at the click target the moment Lucid
+  fires a coordinate action. Frameless click-through PySide6 widget, fades
+  out in 450 ms via `QPropertyAnimation`. Action-type colour coding (blue
+  for left click, orange for right click, purple for double click, green
+  for drag, pink for type/key).
+- **Browser actions** (optional extra `lucid[browser]`) — eight
+  Playwright-backed actions: `browser_launch`, `browser_goto`,
+  `browser_click_selector`, `browser_fill`, `browser_press`,
+  `browser_wait_for`, `browser_screenshot`, `browser_close`. One shared
+  Chromium context per Execute run; ExecuteMode.reset() and
+  AppController.shutdown() tear it down. The system prompt grows a
+  `WEB OTOMASYON` block when `settings.browser.enabled = true`.
+- **MCP bridge** (optional extra `lucid[mcp]`) — spawn external Model
+  Context Protocol servers over stdio and surface each advertised tool as
+  a Lucid action named `mcp_<server>_<tool>`. Server manifest at
+  `data/mcp_servers.yaml`; `${ENV_VAR}` expansion in the env map at load
+  time. The supervisor owns a background asyncio loop so sync action
+  callers stay sync. System prompt grows an `EXTERNAL TOOLS AVAILABLE`
+  section listing the live MCP actions.
+
+### Changed
+
+- ExecuteMode now folds narration text and tool plan markers into the new
+  `[thought]` stream channel while the visible transcript stays the same.
+- `lucid.actions.registry.reset_for_tests()` now drops every cached module
+  under `lucid.actions.*` (except `registry` and `schemas`) so re-discovery
+  reloads optional sub-packages cleanly.
+
+### New stream prefixes
+
+- `[step] <session_dir>|<id>|<action>|<thumb>|<outcome>` — Step Journal record.
+- `[thought] <text>` — narration or `🛠 plan: ...` line for ThoughtChain.
+- `[halo] <action>|<x>,<y>` — Cursor Halo flash request.
+
+### Settings
+
+- `settings.journal.{enabled, max_sessions, thumb_width, webp_quality}`
+- `settings.overlay.{show_thoughts, thought_history, cursor_halo, halo_duration_ms, halo_radius_px}`
+- `settings.browser.{enabled, headless, viewport_width, viewport_height, default_timeout_ms, user_agent, locale}`
+- `settings.mcp.{enabled, servers_file, call_timeout_seconds, initialize_timeout_seconds}`
+
+### Tests
+
+26 new tests across the four feature areas plus an end-to-end ExecuteMode
+stream test that exercises `[step]`, `[thought]`, and `[halo]` together with
+on-disk journal verification. Real Chromium and real MCP-server-over-stdio
+paths are exercised by the existing test runner; opt-in flags keep them
+silent when the extras are missing.
+
 ## [0.5.0] — 2026-05-19
 
 First public open-source release.

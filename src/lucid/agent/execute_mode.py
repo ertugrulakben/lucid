@@ -45,6 +45,7 @@ from lucid.executor import (
     snapshot as state_snapshot,
 )
 from lucid.executor.verify import diff as state_diff
+from lucid.journal import StepJournal
 from lucid.llm.anthropic_client import build_computer_tool
 from lucid.llm.provider import LLMProvider, Message
 from lucid.llm.schemas import ActionBlock
@@ -196,6 +197,7 @@ class ExecuteMode:
         self._current_goal: str = ""
         self._target_app: str | None = None
         self._transcript: list[str] = []
+        self._journal: StepJournal | None = None
 
     def cancel(self) -> None:
         self._cancel.set()
@@ -206,6 +208,16 @@ class ExecuteMode:
         self._transcript.clear()
         self._current_goal = ""
         self._target_app = None
+        self._journal = None
+        # Tear down the shared Playwright runtime, if any, so a new
+        # conversation starts with a fresh browser context instead of
+        # inheriting the previous task's cookies and open tabs.
+        try:
+            from lucid.actions.browser.runtime import BrowserRuntime
+
+            BrowserRuntime.reset()
+        except Exception as exc:
+            log.debug("browser reset skipped: %s", exc)
 
     def run(
         self,
@@ -228,6 +240,7 @@ class ExecuteMode:
         self._transcript.clear()
         self._pending_attachments = list(attachments or [])
         budget = RetryBudget(max_attempts=self.settings.executor.retry_max_attempts)
+        self._open_journal_if_enabled(prompt)
 
         # Before spinning up a fresh Execute loop, check whether the prompt
         # matches a saved workflow. Single-line matches go through the
@@ -337,9 +350,10 @@ class ExecuteMode:
 
             _prune_old_images(messages, keep_last=2)
 
+            narration_buffer = ""
             for event in self.provider.stream(
                 messages,
-                system=SYSTEM_PROMPT,
+                system=self._system_prompt(),
                 tools=[tool],
                 max_tokens=2048,
                 model=self.settings.execute_model,
@@ -352,6 +366,7 @@ class ExecuteMode:
                     yield event.text
                     self._transcript.append(event.text)
                     assistant_blocks.append({"type": "text", "text": event.text})
+                    narration_buffer += event.text
                 elif event.kind == "tool_use" and event.tool_use is not None:
                     block = ActionBlock.from_tool_use(event.tool_use)
                     tool_uses.append(block)
@@ -363,12 +378,21 @@ class ExecuteMode:
                             "input": event.tool_use.raw.get("input", {}),
                         }
                     )
+                    # ThoughtChain: flush any accumulated narration first so it
+                    # sits above the plan line, then emit the structured plan.
+                    if narration_buffer.strip():
+                        yield _emit_thought(narration_buffer.strip())
+                        narration_buffer = ""
+                    yield _emit_thought("🛠 plan: " + _fmt_plan(block))
                 elif event.kind == "done":
                     last_stop_reason = event.stop_reason
                 elif event.kind == "error":
                     yield f"\n[error] {event.error}\n"
                     self._transcript.append(f"[error] {event.error}")
                     return
+            if narration_buffer.strip():
+                yield _emit_thought(narration_buffer.strip())
+                narration_buffer = ""
 
             if assistant_blocks:
                 messages.append(Message(role="assistant", content=_merge_text(assistant_blocks)))
@@ -415,6 +439,9 @@ class ExecuteMode:
                 if self._cancel.is_set():
                     return
                 action = _translate_coords(action, snapshot)
+                # Snapshot the screen image BEFORE the action so the Step Journal
+                # can show a true visual before/after pair, not just the focus diff.
+                journal_before_image = snapshot.image if self._journal is not None else None
 
                 decision = self.safety.evaluate(action)
                 if decision.requires_confirm:
@@ -459,6 +486,16 @@ class ExecuteMode:
                 # Annotate tool_result so Claude sees retry/noop guidance.
                 annotated = decorate_result(result_text, budget, action.action, action.params)
 
+                # Cursor Halo: paint a brief flash at the action point so the
+                # user can follow Lucid's mouse activity at a glance. Only emit
+                # when a coordinate is meaningful for this action.
+                halo_coord = _halo_coord_for(action)
+                if (
+                    halo_coord is not None
+                    and getattr(self.settings.overlay, "cursor_halo", True)
+                ):
+                    yield f"\n[halo] {action.action}|{halo_coord[0]},{halo_coord[1]}\n"
+
                 time.sleep(self.settings.safety.pause_seconds)
                 new_snapshot = ContextSnapshot.capture(self.settings)
                 snapshot = new_snapshot
@@ -488,6 +525,29 @@ class ExecuteMode:
                     "\n[action-log] "
                     f"{_fmt_action_for_log(action.action, action.params, result_text)}\n"
                 )
+
+                # Step Journal: persist before/after thumbnails + a one-line
+                # record so the overlay's Step Gallery can rebuild the run
+                # visually. The yield below carries enough metadata for the UI
+                # to update without re-reading the JSONL file on every step.
+                if self._journal is not None:
+                    try:
+                        record = self._journal.record(
+                            action_name=action.action,
+                            params=action.params,
+                            before_image=journal_before_image,
+                            after_image=new_snapshot.image,
+                            outcome=result_text,
+                            monitor_index=new_snapshot.monitor_index,
+                        )
+                        yield (
+                            "\n[step] "
+                            f"{self._journal.session_dir}|{record.id}|{record.action_name}|"
+                            f"{record.after_thumb or record.before_thumb or ''}|"
+                            f"{record.outcome_one_line()}\n"
+                        )
+                    except Exception as exc:
+                        log.debug("journal record failed for %s: %s", action.action, exc)
                 if captcha_hit:
                     # Let Claude see the update and decide on the next step.
                     break
@@ -719,6 +779,62 @@ class ExecuteMode:
 
         return extracted
 
+    def _system_prompt(self) -> str:
+        """Return SYSTEM_PROMPT plus any feature-gated addenda (browser, MCP)."""
+        extras: list[str] = []
+        if getattr(self.settings, "browser", None) and self.settings.browser.enabled:
+            extras.append(
+                "WEB OTOMASYON. `browser_*` action family is preferred for any "
+                "DOM-bearing web work: `browser_launch` → `browser_goto` → "
+                "`browser_click_selector` / `browser_fill` / `browser_press` / "
+                "`browser_wait_for` / `browser_screenshot` / `browser_close`. "
+                "Keep CSS selectors durable -- prefer `[data-testid=...]`, `id`, "
+                "`aria-label`. Fall back to pyautogui only when the target is "
+                "the user's existing Chrome window."
+            )
+        mcp_names = self._registered_mcp_action_names()
+        if mcp_names:
+            preview = ", ".join(mcp_names[:12])
+            more = "" if len(mcp_names) <= 12 else f" (+{len(mcp_names) - 12} more)"
+            extras.append(
+                "EXTERNAL TOOLS AVAILABLE via the MCP bridge: "
+                f"{preview}{more}. Use these like any other action when the "
+                "task fits (file system reads, web search, custom servers). "
+                "Each MCP action accepts a JSON `arguments` object whose keys "
+                "match the server's published input schema."
+            )
+        if not extras:
+            return SYSTEM_PROMPT
+        return SYSTEM_PROMPT + "\n\n" + "\n\n".join(extras)
+
+    @staticmethod
+    def _registered_mcp_action_names() -> list[str]:
+        """Read currently-registered MCP action names from the registry."""
+        try:
+            from lucid.actions import registry as _registry
+
+            return sorted(n for n in _registry.available() if n.startswith("mcp_"))
+        except Exception:
+            return []
+
+    def _open_journal_if_enabled(self, goal: str) -> None:
+        """Open a fresh Step Journal session unless the user disabled it."""
+        cfg = getattr(self.settings, "journal", None)
+        if cfg is None or not getattr(cfg, "enabled", True):
+            self._journal = None
+            return
+        try:
+            self._journal = StepJournal.open_session(
+                self.settings.journals_dir,
+                goal=goal,
+                thumb_width=cfg.thumb_width,
+                webp_quality=cfg.webp_quality,
+                max_sessions=cfg.max_sessions,
+            )
+        except Exception as exc:
+            log.warning("could not open step journal: %s", exc)
+            self._journal = None
+
     def _record_if_enabled(self, budget: RetryBudget) -> None:
         if self._fact_recorder is None or not self._current_goal:
             return
@@ -820,6 +936,47 @@ def _prune_old_images(messages: list, keep_last: int = 2) -> None:
             if had_image:
                 new_inner.append({"type": "text", "text": "[earlier screenshot omitted]"})
             block["content"] = new_inner
+
+
+def _emit_thought(text: str) -> str:
+    """Wrap a thought payload in the stream protocol prefix the overlay parses."""
+    safe = text.replace("\n", " ").strip()
+    return f"\n[thought] {safe}\n"
+
+
+def _fmt_plan(action: ActionBlock) -> str:
+    """One-line summary of an action the model is about to run (for ThoughtChain)."""
+    params = action.params or {}
+    bits: list[str] = []
+    for key in ("element_name", "window_title", "file_path", "url", "command"):
+        value = params.get(key)
+        if value:
+            bits.append(f"{key}={value!r}")
+            break
+    if not bits and params.get("keys"):
+        bits.append("keys=" + "+".join(str(k) for k in params["keys"]))
+    if not bits and params.get("text"):
+        snippet = str(params["text"]).replace("\n", " ")
+        if len(snippet) > 30:
+            snippet = snippet[:29] + "…"
+        bits.append(f"text={snippet!r}")
+    if not bits and params.get("coordinate"):
+        bits.append(f"@{tuple(params['coordinate'])}")
+    detail = " ".join(bits) if bits else "(no params)"
+    return f"{action.action}  {detail}"
+
+
+def _halo_coord_for(action: ActionBlock) -> tuple[int, int] | None:
+    """Return the screen coordinate the halo should flash at, if any."""
+    params = action.params or {}
+    for key in ("coordinate", "start_coordinate", "end_coordinate"):
+        value = params.get(key)
+        if isinstance(value, (list, tuple)) and len(value) == 2:
+            try:
+                return (int(value[0]), int(value[1]))
+            except (TypeError, ValueError):
+                continue
+    return None
 
 
 def _fmt_action_for_log(name: str, params: dict, result: str) -> str:
