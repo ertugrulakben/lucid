@@ -59,7 +59,7 @@ ocr = [
 omniparser = [
     "torch>=2.1",
     "transformers>=4.40",
-    "ultralytics>=8.0",
+    "ultralytics>=8.4.54",
 ]
 browser = [
     "playwright>=1.40",
