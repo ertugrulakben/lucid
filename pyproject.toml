@@ -57,7 +57,7 @@ ocr = [
     "easyocr>=1.7",
 ]
 omniparser = [
-    "torch>=2.1",
+    "torch>=2.12.0",
     "transformers>=4.40",
     "ultralytics>=8.0",
 ]
