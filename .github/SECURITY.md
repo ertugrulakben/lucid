@@ -4,8 +4,8 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.0.x   | :white_check_mark: |
-| < 1.0   | :x:                |
+| 0.6.x   | :white_check_mark: |
+| < 0.6   | :x:                |
 
 ## Reporting a Vulnerability
 
@@ -39,7 +39,7 @@ We credit reporters in release notes unless they prefer to remain anonymous.
 - API keys are stored in the OS keyring, never in plain-text files.
 - Destructive actions require explicit user confirmation by default.
 - Scheduled tasks run with the same privileges as the user who started Lucid.
-- Auto-updates verify SHA-256 hashes against an Ed25519-signed manifest before installation.
+- `lucid update check` only reports a newer GitHub release; it never downloads or installs anything. Signed release manifests are planned (ROADMAP Phase 4).
 
 ## Out of Scope
 
@@ -49,5 +49,4 @@ We credit reporters in release notes unless they prefer to remain anonymous.
 
 ## Code Signing Roadmap
 
-Current releases ship with an Ed25519-signed manifest (`manifest.json` + `manifest.sig`) and a public key embedded in the binary (`lucid-public.pem`).
-A transition to a Windows Authenticode EV certificate is planned once the project reaches sustainable funding.
+Releases are not signed yet. Planned: an Ed25519-signed release manifest with the public key embedded in the app (ROADMAP Phase 4), then a Windows Authenticode EV certificate once the project reaches sustainable funding.

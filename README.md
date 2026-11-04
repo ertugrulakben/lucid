@@ -341,8 +341,10 @@ Everything persistent lives under `data/` at the repo root (portable - no `%APPD
 PRs welcome. Before sending:
 
 ```powershell
+uv sync --extra dev --extra mcp --extra browser
 uv run pytest -q                   # 200+ tests, should be green
-uv run ruff check src/             # style
+uv run ruff check .                # lint
+uv run mypy src                    # types (blocking in CI)
 uv run pre-commit run --all-files  # lint + format + spelling
 ```
 

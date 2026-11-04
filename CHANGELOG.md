@@ -2,6 +2,62 @@
 
 All notable changes to Lucid are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Closes the technical items of ROADMAP Phase 0. The only runtime change is the
+`lucid doctor` fix below.
+
+### Added
+
+- GitHub Actions CI, for real this time: a Windows matrix (Python 3.10, 3.11,
+  3.12) runs ruff, ruff format, mypy and pytest; a Linux job runs pre-commit
+  and mypy. The uv download cache comes from `astral-sh/setup-uv`.
+- A local pre-commit hook (also run in CI) refuses to commit local data and
+  secret files: `data/`, `private/`, `profile.yaml`, `.env*`, keys and
+  databases. `detect-private-key` and `detect-secrets` run as well; the two
+  known false positives are marked inline with `# pragma: allowlist secret`.
+
+### Changed
+
+- mypy is now a blocking check; type annotations were fixed so `mypy src`
+  passes, without behaviour changes.
+- `ruff==0.17.3` and `mypy==2.4.1` are pinned in the `dev` extra, and the
+  pre-commit ruff hooks use the same version on the whole tree, as CI does.
+- Code reformatted with ruff format 0.17.3.
+- SECURITY.md lists 0.6.x as the supported line and describes release signing
+  as planned, not shipped.
+- `.gitignore` also covers `.env.*` (except `.env.example`), `*.p12`, `*.pfx`,
+  `id_rsa*`, SQLite databases with their WAL/SHM files (`memory.db`) and
+  `mcp_servers.yaml`.
+
+### Removed
+
+- `black` from the `dev` extra; ruff format is the single formatter.
+
+### Fixed
+
+- CI never ran: the runtime `workflows/` rule in `.gitignore` also matched
+  `.github/workflows/`, so the workflow announced in 0.5.0 was never
+  committed. `.github/workflows/` is now exempt.
+- `pre-commit run --all-files` broke imports: codespell ran with
+  `--write-changes` and rewrote the Set-of-Mark module name `som` to `some`.
+  `som` is now ignored and codespell only reports.
+- The test suite read and wrote the developer's real `data/settings.yaml`;
+  tests now point `LUCID_DATA_DIR` at a temporary folder.
+- The MCP echo test server failed on `mcp` 2.x, where `FastMCP` became
+  `MCPServer`. The fixture supports both; the bridge passes its end-to-end
+  test on mcp 1.27 and 2.3.
+- `lucid doctor` failed when the API key was in the OS keyring and passed on a
+  plain `ANTHROPIC_API_KEY` that Lucid never reads. The key check and the model
+  probe now use the same sources as the Anthropic client: the keyring, then
+  `LUCID_ANTHROPIC_API_KEY`.
+- Error messages, `baslat.bat`, example 01 and a settings docstring told users
+  to set `ANTHROPIC_API_KEY`; they now name `lucid setup` and
+  `LUCID_ANTHROPIC_API_KEY`. `baslat.bat` no longer checks for `.env` files,
+  which Lucid never loads.
+- The documentation named `Ctrl+Alt+K` as the kill switch; the default is
+  `Ctrl+Shift+K`.
+
 ## [0.6.0] - 2026-05-26
 
 Reasoning-transparency + ecosystem release. Four independent features, each
@@ -182,7 +238,3 @@ First public open-source release.
 - Opt-in anonymous telemetry.
 - Windows installer (PyInstaller + NSIS).
 - GitHub Actions CI (lint, test, build).
-
-## [0.1.0] - TBD
-
-First public release.

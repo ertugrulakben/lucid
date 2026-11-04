@@ -5,9 +5,10 @@ Thanks for your interest. This document covers the dev setup, code style, and pu
 ## Dev Setup
 
 ```powershell
-git clone https://github.com/lucid-app/lucid
+git clone https://github.com/ertugrulakben/lucid
 cd lucid
-uv sync --all-extras
+uv sync --extra dev --extra mcp --extra browser
+uv run pre-commit install
 uv run lucid
 ```
 
@@ -15,12 +16,12 @@ Lucid targets Python 3.10+. All development happens against Windows 10/11. Linux
 
 ## Code Style
 
-- `ruff check .` - lint
-- `ruff format .` - format
-- `black src tests` - additional formatting parity
-- `mypy src` - type check (non-strict for now)
+- `uv run ruff check .` - lint
+- `uv run ruff format .` - format (ruff is the only formatter)
+- `uv run mypy src` - type check (non-strict for now, but it must pass)
+- `uv run pytest -q` - tests
 
-CI runs all four on every pull request. Please run them locally before pushing.
+CI runs all four on every pull request (Windows, Python 3.10 to 3.12; the static checks also run on Linux). Please run them locally before pushing.
 
 ## Commits
 
@@ -53,4 +54,4 @@ Open an issue on GitHub with:
 
 ## Security
 
-Do not open public issues for security problems. Email `security@lucid.app` (placeholder - set real address before launch).
+Do not open public issues for security problems. Report them through GitHub Private Vulnerability Reporting, as described in [SECURITY.md](.github/SECURITY.md).
