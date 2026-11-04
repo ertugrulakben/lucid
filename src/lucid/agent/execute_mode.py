@@ -601,7 +601,11 @@ class ExecuteMode:
         Lucid saves the file under ``data/proofs/`` with a timestamp so the
         user can verify what the desktop looked like the moment Lucid
         considered the task done. The path is also recorded in memory.
+        Nothing is captured or saved while ``screenshot.persist`` is off: the
+        user asked for no screenshots on disk.
         """
+        if not self.settings.screenshot.persist:
+            return
         try:
             final = ContextSnapshot.capture(self.settings)
         except Exception as exc:

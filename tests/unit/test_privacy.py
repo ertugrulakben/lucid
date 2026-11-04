@@ -7,7 +7,9 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from PIL import Image
 
+from lucid.agent import execute_mode
 from lucid.agent.execute_mode import _fmt_action_for_log, _fmt_plan
 from lucid.config.settings import Settings
 from lucid.executor.actions import _summarize_params
@@ -90,3 +92,32 @@ def test_browser_fill_outcome_reports_length_only(monkeypatch: pytest.MonkeyPatc
     assert filled == [TYPED]
     assert TYPED not in out
     assert f"({len(TYPED)} chars)" in out
+
+
+def _proof_owner(data_dir: Path, persist: bool) -> SimpleNamespace:
+    settings = Settings(data_dir=data_dir)
+    settings.screenshot.persist = persist
+    return SimpleNamespace(settings=settings, _current_goal="open notepad", store=None)
+
+
+def test_final_proof_not_taken_when_persist_is_off(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def no_capture(_settings: Settings) -> None:
+        raise AssertionError("screen captured although screenshot.persist is off")
+
+    monkeypatch.setattr(execute_mode.ContextSnapshot, "capture", staticmethod(no_capture))
+    owner = _proof_owner(tmp_path, persist=False)
+    assert list(execute_mode.ExecuteMode._final_proof(owner, None)) == []
+    assert not (tmp_path / "proofs").exists()
+
+
+def test_final_proof_saved_when_persist_is_on(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    final = SimpleNamespace(image=Image.new("RGB", (32, 16)))
+    monkeypatch.setattr(execute_mode.ContextSnapshot, "capture", staticmethod(lambda _s: final))
+    owner = _proof_owner(tmp_path, persist=True)
+    out = "".join(execute_mode.ExecuteMode._final_proof(owner, None))
+    assert "final screenshot saved" in out
+    assert len(list((tmp_path / "proofs").glob("*.png"))) == 1
