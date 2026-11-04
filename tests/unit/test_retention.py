@@ -67,6 +67,19 @@ def test_apply_retention_uses_each_setting(tmp_path: Path) -> None:
     assert log_new.exists()
 
 
+def test_proofs_have_their_own_retention(tmp_path: Path) -> None:
+    now = time.time()
+    settings = Settings(data_dir=tmp_path)
+    settings.screenshot.retention_hours = 1
+    settings.screenshot.proof_retention_hours = 48
+    shot = _make(settings.screenshot_dir / "1.png", 2, now)
+    proof = _make(tmp_path / "proofs" / "p.png", 25, now)
+    removed = apply_retention(settings, now=now)
+    assert (removed["screenshots"], removed["proofs"]) == (1, 0)
+    assert not shot.exists()
+    assert proof.exists()
+
+
 def test_journal_retention_hours_opt_in(tmp_path: Path) -> None:
     now = time.time()
     settings = Settings(data_dir=tmp_path)

@@ -18,10 +18,16 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class ScreenshotSettings(BaseModel):
     max_width: int = 1024
-    persist: bool = True
-    # Hours to keep files in screenshots/ and proofs/; 0 keeps them. Enforced at
+    # Keep every captured screen as a PNG in screenshots/. Off by default since
+    # 0.6.2: Lucid itself never reads these files back.
+    persist: bool = False
+    # Hours to keep files in screenshots/; 0 keeps them. Retention is enforced at
     # app start and before every Execute run (lucid.privacy.apply_retention).
     retention_hours: int = 24
+    # Save the final screenshot of each Execute run to proofs/ as evidence of
+    # what the desktop looked like when the task ended, and how long to keep it.
+    save_proof: bool = True
+    proof_retention_hours: int = Field(default=24, ge=0)
     blacklist_titles: list[str] = Field(
         default_factory=lambda: [
             "Bitwarden",

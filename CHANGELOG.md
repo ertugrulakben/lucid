@@ -14,18 +14,30 @@ All notable changes to Lucid are documented here. Format follows [Keep a Changel
   `type`, `type_text` and `browser_fill` is now replaced by its length;
   `journal.record_text` (off by default) keeps it in the journal for
   debugging.
-- The final proof screenshot honours `screenshot.persist`: with persistence
-  off, nothing is captured or saved.
+- The final proof screenshot has its own switch, `screenshot.save_proof` (on
+  by default), and its own retention, `screenshot.proof_retention_hours` (24).
+  With the switch off nothing is captured or saved; before, the proof was
+  saved even with `screenshot.persist` off.
 - Text Lucid pastes stays out of the Windows clipboard history (Win+V) and
   the cloud clipboard. Each paste carries the opt-out formats Windows
   documents under "Cloud Clipboard and Clipboard History Formats"
   (`ExcludeClipboardContentFromMonitorProcessing`,
   `CanIncludeInClipboardHistory`, `CanUploadToCloudClipboard`); if the
   clipboard is busy Lucid falls back to a plain copy as before.
-- `screenshot.retention_hours` (screenshots and proofs) and
-  `scheduler.log_retention_days` are now enforced, at start-up and before
-  every Execute run. The new `journal.retention_hours` (0, off, by default)
-  adds an age limit to the Step Gallery.
+- `screenshot.retention_hours` (screenshots), `screenshot.proof_retention_hours`
+  (proofs) and `scheduler.log_retention_days` are now enforced, at start-up
+  and before every Execute run. The new `journal.retention_hours` (0, off, by
+  default) adds an age limit to the Step Gallery.
+
+### Changed
+
+- **Behaviour change:** `screenshot.persist` is now off by default, so Lucid
+  no longer keeps a PNG of every captured screen in `screenshots\`. Nothing in
+  Lucid reads those files back; the Step Gallery and the proof screenshot do
+  not depend on them. Lucid writes the full settings to `settings.yaml` the
+  first time it starts, so an existing install still says
+  `screenshot.persist: true` there: set it to `false` to get the new
+  behaviour.
 
 ### Fixed
 

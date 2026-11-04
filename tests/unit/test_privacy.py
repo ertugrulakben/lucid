@@ -94,30 +94,38 @@ def test_browser_fill_outcome_reports_length_only(monkeypatch: pytest.MonkeyPatc
     assert f"({len(TYPED)} chars)" in out
 
 
-def _proof_owner(data_dir: Path, persist: bool) -> SimpleNamespace:
+def test_screenshot_defaults_keep_steps_off_disk_and_proofs_on() -> None:
+    shot = Settings().screenshot
+    assert shot.persist is False
+    assert shot.save_proof is True
+    assert shot.proof_retention_hours == 24
+
+
+def _proof_owner(data_dir: Path, save_proof: bool) -> SimpleNamespace:
     settings = Settings(data_dir=data_dir)
-    settings.screenshot.persist = persist
+    settings.screenshot.save_proof = save_proof
     return SimpleNamespace(settings=settings, _current_goal="open notepad", store=None)
 
 
-def test_final_proof_not_taken_when_persist_is_off(
+def test_final_proof_not_taken_when_save_proof_is_off(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     def no_capture(_settings: Settings) -> None:
-        raise AssertionError("screen captured although screenshot.persist is off")
+        raise AssertionError("screen captured although screenshot.save_proof is off")
 
     monkeypatch.setattr(execute_mode.ContextSnapshot, "capture", staticmethod(no_capture))
-    owner = _proof_owner(tmp_path, persist=False)
+    owner = _proof_owner(tmp_path, save_proof=False)
     assert list(execute_mode.ExecuteMode._final_proof(owner, None)) == []
     assert not (tmp_path / "proofs").exists()
 
 
-def test_final_proof_saved_when_persist_is_on(
+def test_final_proof_saved_by_default_even_with_persist_off(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     final = SimpleNamespace(image=Image.new("RGB", (32, 16)))
     monkeypatch.setattr(execute_mode.ContextSnapshot, "capture", staticmethod(lambda _s: final))
-    owner = _proof_owner(tmp_path, persist=True)
+    owner = _proof_owner(tmp_path, save_proof=True)
+    assert owner.settings.screenshot.persist is False
     out = "".join(execute_mode.ExecuteMode._final_proof(owner, None))
     assert "final screenshot saved" in out
     assert len(list((tmp_path / "proofs").glob("*.png"))) == 1

@@ -77,14 +77,15 @@ def prune_older_than(directory: Path, max_age_hours: float, *, now: float | None
 def apply_retention(settings: Settings, *, now: float | None = None) -> dict[str, int]:
     """Enforce the retention settings on the data folder; returns removals per folder.
 
-    - ``screenshots/`` and ``proofs/``: ``screenshot.retention_hours``
+    - ``screenshots/``: ``screenshot.retention_hours``
+    - ``proofs/``: ``screenshot.proof_retention_hours``
     - ``journals/``: ``journal.retention_hours`` (0 = only ``journal.max_sessions``)
     - ``schedule_logs/``: ``scheduler.log_retention_days``
     """
     data_dir = settings.data_dir
     plan = {
         "screenshots": (settings.screenshot_dir, settings.screenshot.retention_hours),
-        "proofs": (data_dir / "proofs", settings.screenshot.retention_hours),
+        "proofs": (data_dir / "proofs", settings.screenshot.proof_retention_hours),
         "journals": (settings.journals_dir, settings.journal.retention_hours),
         "schedule_logs": (data_dir / "schedule_logs", settings.scheduler.log_retention_days * 24),
     }
