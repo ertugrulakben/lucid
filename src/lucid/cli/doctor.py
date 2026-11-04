@@ -17,7 +17,6 @@ the bulk of first-run support tickets:
 from __future__ import annotations
 
 import json
-import os
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -104,15 +103,11 @@ def _check_api_key() -> tuple[str, str]:
     if mode == "lm_studio":
         return OK, f"backend=lm_studio at {cfg.backend.lm_studio_url}"
     if mode == "api":
-        if os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("LUCID_ANTHROPIC_API_KEY"):
-            return OK, "ANTHROPIC_API_KEY visible"
-        try:
-            from lucid.config.secrets import has_anthropic_key
+        # Mirror the Anthropic client: keyring first, then LUCID_ANTHROPIC_API_KEY.
+        from lucid.config.secrets import ANTHROPIC_KEY, get_secret
 
-            if has_anthropic_key():
-                return OK, "key stored in keyring"
-        except Exception:
-            pass
+        if get_secret(ANTHROPIC_KEY):
+            return OK, "API key configured (keyring or LUCID_ANTHROPIC_API_KEY)"
         return FAIL, "no API key configured (run `lucid setup`)"
     return WARN, f"unknown backend mode: {mode}"
 
@@ -181,9 +176,12 @@ def _check_model() -> tuple[str, str]:
     try:
         from anthropic import Anthropic  # type: ignore
 
-        api_key = os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("LUCID_ANTHROPIC_API_KEY")
+        from lucid.config.secrets import ANTHROPIC_KEY, get_secret
+
+        # Same source as the client and _check_api_key: keyring, then LUCID_ANTHROPIC_API_KEY.
+        api_key = get_secret(ANTHROPIC_KEY)
         if not api_key:
-            return WARN, "skipping model probe (no API key visible to this process)"
+            return WARN, "skipping model probe (no API key configured)"
         client = Anthropic(api_key=api_key)
         client.messages.create(
             model=model,

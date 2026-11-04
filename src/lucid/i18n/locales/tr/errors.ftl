@@ -1,7 +1,7 @@
 ### Hata mesajları — kısa, eyleme dönük, gizli bilgi sızdırmaz.
 
 # Yapılandırma / kurulum
-err-no-api-key = API anahtarı tanımlı değil. `lucid setup` çalıştırın veya ANTHROPIC_API_KEY ayarlayın.
+err-no-api-key = API anahtarı tanımlı değil. `lucid setup` çalıştırın veya LUCID_ANTHROPIC_API_KEY ayarlayın.
 err-bad-config = Yapılandırma dosyası okunamadı: { $path }
 err-bad-locale = Bilinmeyen dil: { $locale }. İngilizceye dönülüyor.
 

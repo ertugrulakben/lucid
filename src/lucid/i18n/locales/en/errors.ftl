@@ -1,7 +1,7 @@
 ### Error messages — short, actionable, never leaks secrets.
 
 # Configuration / setup
-err-no-api-key = No API key configured. Run `lucid setup` or set ANTHROPIC_API_KEY.
+err-no-api-key = No API key configured. Run `lucid setup` or set LUCID_ANTHROPIC_API_KEY.
 err-bad-config = Configuration file could not be parsed: { $path }
 err-bad-locale = Unknown locale: { $locale }. Falling back to English.
 
