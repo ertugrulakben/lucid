@@ -32,11 +32,16 @@ cd lucid
 uv sync --all-extras
 ```
 
-`--all-extras` pulls every optional group, the PyTorch-based `omniparser` and `ocr` included. For a lighter install, name the ones you need:
+`--all-extras` pulls every optional group, the PyTorch-based `omniparser` and `ocr` included. For a lighter install, run this instead and name only the groups you need (`uv sync` removes the extras you leave out):
 
 ```powershell
-uv sync --extra browser --extra mcp           # Playwright `browser_*` actions + MCP bridge
-uv run python -m playwright install chromium  # one-time Chromium download for `browser_*`
+uv sync --extra browser --extra mcp   # Playwright `browser_*` actions + MCP bridge
+```
+
+Browser actions need a one-time Chromium download, whichever install you chose:
+
+```powershell
+uv run python -m playwright install chromium
 ```
 
 ### 2. Configure
@@ -243,7 +248,7 @@ captcha:
   max_per_hour: 10
 
 ocr:
-  enabled: false                   # optional extra: pip install lucid[ocr]
+  enabled: false                   # needs the ocr extra (see Install)
 
 journal:
   enabled: true                    # Step Gallery on/off
@@ -260,14 +265,14 @@ overlay:
   halo_duration_ms: 450
   halo_radius_px: 48
 
-browser:                           # optional extra: pip install lucid[browser]
+browser:                           # needs the browser extra (see Install)
   enabled: false
   headless: false
   viewport_width: 1280
   viewport_height: 800
   default_timeout_ms: 8000
 
-mcp:                               # optional extra: pip install lucid[mcp]
+mcp:                               # needs the mcp extra (see Install)
   enabled: false
   servers_file: "data/mcp_servers.yaml"
   call_timeout_seconds: 30
@@ -346,7 +351,7 @@ uv run mypy src                    # types (blocking in CI)
 uv run pre-commit run --all-files  # lint + format + spelling
 ```
 
-File issues at https://github.com/ertugrulakben/lucid/issues - please include `lucid-version`, OS build, and `data/logs/lucid.log` tail.
+File issues at https://github.com/ertugrulakben/lucid/issues - please include `lucid --version`, OS build, and `data/logs/lucid.log` tail.
 
 ---
 

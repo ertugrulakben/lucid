@@ -61,10 +61,16 @@ Closes the technical items of ROADMAP Phase 0. The only runtime change is the
 - The documentation named `Ctrl+Alt+K` as the kill switch; the default is
   `Ctrl+Shift+K`.
 - The README listed `lucid teach` and `lucid list`, which do not exist (Teach
-  recordings start in the overlay, `lucid workflows` lists them), and said
-  `--all-extras` skips the browser and MCP extras. CONTRIBUTING and the bug
-  report template pointed at the wrong log file, and the pull request
-  checklist now names the checks CI runs.
+  recordings start in the overlay, `lucid workflows` lists them), asked for
+  `lucid-version` instead of `lucid --version`, said `--all-extras` skips the
+  browser and MCP extras and suggested `pip install lucid[...]`, which fetches
+  an unrelated PyPI package. CONTRIBUTING and the bug report template pointed
+  at the wrong log file, and the pull request checklist now names the checks
+  CI runs.
+- `docs/privacy.md` placed Lucid's files under `%APPDATA%\Lucid` and `%TEMP%`;
+  they live in the data folder (`data\` in a source checkout). It also said
+  screenshots are deleted after `screenshot.retention_hours`, which Lucid
+  does not enforce yet; the page now says so.
 
 ## [0.6.0] - 2026-05-26
 

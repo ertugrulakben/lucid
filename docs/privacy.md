@@ -23,13 +23,17 @@ Replay of a teach-mode workflow sends the same payload for every step.
 
 ## Persisted locally
 
+Lucid keeps its local files in one data folder: `data\` inside the Lucid
+folder for a source checkout, `%APPDATA%\Lucid\` when that folder is
+read-only, or the folder named by `LUCID_DATA_DIR`. `lucid status` prints it.
+
 | File | Location | Contents |
 | ---- | -------- | -------- |
-| `settings.yaml` | `%APPDATA%\Lucid\` | Hotkey, provider, safety settings. No secrets. |
-| `install_id` | `%APPDATA%\Lucid\` | Random UUID used for opt-in telemetry. |
-| `logs\lucid.log` | `%APPDATA%\Lucid\` | Action names and sizes. Never prompt text, never screenshot bytes. |
-| Screenshots | `%TEMP%\lucid\screenshots\` | PNG files used during an active prompt. Auto-deleted after `screenshot.retention_hours` (default 24). |
-| Workflows | `%APPDATA%\Lucid\workflows\` | Teach-mode JSON files. Stays local unless you export. |
+| `settings.yaml` | data folder | Hotkey, provider, safety settings. No secrets. |
+| `install_id` | data folder | Random UUID used for opt-in telemetry. |
+| `logs\lucid.log` | data folder | Action names and sizes. Never prompt text, never screenshot bytes. |
+| Screenshots | data folder, `screenshots\` | PNG files of captured screens while `screenshot.persist` is on (the default). `screenshot.retention_hours` is not enforced yet, so they stay until you delete them. |
+| Workflows | data folder, `workflows\` | Teach-mode JSON files. Stays local unless you export. |
 
 ## Telemetry
 
@@ -39,9 +43,12 @@ endpoint URL is user-configurable; if unset, telemetry is a no-op.
 
 ## Data deletion
 
-Uninstalling Lucid does not remove `%APPDATA%\Lucid\`. Delete the folder
-manually to wipe local data. The OS keyring entry is stored under the service
-name `lucid` and can be removed via your OS credential manager.
+Delete the data folder to wipe local data; uninstalling Lucid does not remove
+`%APPDATA%\Lucid\` or a `LUCID_DATA_DIR` folder. Besides the files above it
+holds `memory.db`, `profile.yaml` and the Step Gallery `journals\`
+(before/after screenshots of Execute runs). The OS keyring entry is stored
+under the service name `lucid` and can be removed via your OS credential
+manager.
 
 ## Running fully offline
 

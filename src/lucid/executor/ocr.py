@@ -7,9 +7,10 @@ through EasyOCR, find the text region whose content matches the requested
 label, and click the centre of that region.
 
 EasyOCR is heavy (~30 MB model download on first use, ~300 MB of torch
-deps). We keep it as an **optional extra** installed via
-``pip install lucid[ocr]``. If missing, ``find_text_region`` returns
-``None`` immediately so callers can fall back to a different strategy.
+deps). We keep it as the optional ``ocr`` extra, installed with
+``uv sync --extra ocr`` (or ``--all-extras``). If missing,
+``find_text_region`` returns ``None`` immediately so callers can fall back
+to a different strategy.
 
 Design notes:
 - One cached reader per process; first call initialises with the
