@@ -43,7 +43,8 @@ Closes the technical items of ROADMAP Phase 0. The only runtime change is the
   committed. `.github/workflows/` is now exempt.
 - `pre-commit run --all-files` broke imports: codespell ran with
   `--write-changes` and rewrote the Set-of-Mark module name `som` to `some`.
-  `som` is now ignored and codespell only reports.
+  `som` is now ignored and codespell only reports. On Python 3.10 the hook
+  installs `tomli`, without which codespell skips these pyproject settings.
 - The test suite read and wrote the developer's real `data/settings.yaml`;
   tests now point `LUCID_DATA_DIR` at a temporary folder.
 - The MCP echo test server failed on `mcp` 2.x, where `FastMCP` became

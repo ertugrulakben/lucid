@@ -10,6 +10,9 @@ repos:
     rev: v2.4.3
     hooks:
       - id: codespell
+        # Python 3.10 has no tomllib; without tomli codespell silently skips
+        # [tool.codespell] in pyproject.toml.
+        additional_dependencies: ["tomli==2.5.0"]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
