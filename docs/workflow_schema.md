@@ -57,11 +57,11 @@ gracefully as the UI changes.
 When the replayer re-plans a step against the live screen, selectors are tried
 in the order below. The first match wins.
 
-1. `a11y_name` + `role` — exact accessibility match
+1. `a11y_name` + `role` - exact accessibility match
 2. `automation_id`
 3. `ocr_text` (for steps where OCR was captured)
 4. `image_hash` of the target region (future extension)
-5. `fallback_coord` — literal `[x, y]`, only used when nothing else matches
+5. `fallback_coord` - literal `[x, y]`, only used when nothing else matches
 
 ## Supported actions
 

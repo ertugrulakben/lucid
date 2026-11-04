@@ -10,7 +10,7 @@
 
 ## What Lucid does
 
-Lucid is an always-on tray app that turns your whole desktop into a workspace for a vision LLM. No app-specific integrations, no sign-in flows. Every running program, every file dialog, every browser tab — the model sees what you see and operates the mouse and keyboard directly.
+Lucid is an always-on tray app that turns your whole desktop into a workspace for a vision LLM. No app-specific integrations, no sign-in flows. Every running program, every file dialog, every browser tab - the model sees what you see and operates the mouse and keyboard directly.
 
 Three modes, one prompt bar (Ctrl+1/2/3 to switch, or Tab to cycle):
 
@@ -18,7 +18,7 @@ Three modes, one prompt bar (Ctrl+1/2/3 to switch, or Tab to cycle):
 | --- | --- | --- |
 | **Answer** | Vision Q&A over the current screen. No actions, just text. | "What's this error?", "Write a formula for column D", "Summarise this PDF." |
 | **Teach** | Record a task once with mouse + keyboard, save as a **named workflow** with variables. Every replay re-plans against the live screen. | Invoice creation, data entry, anything repetitive. |
-| **Execute** | Full autonomy: Claude drives the desktop. 16+ native actions — click, type, drag, focus window, click by label, file-dialog paste, screenshot to clipboard, shell peek, captcha solver. Optional: 8 Playwright browser actions and any number of MCP-bridged tools. | "Open Gmail and send X to Y", "Find all PDFs and zip them", "Open Excel and fill these rows". |
+| **Execute** | Full autonomy: Claude drives the desktop. 16+ native actions - click, type, drag, focus window, click by label, file-dialog paste, screenshot to clipboard, shell peek, captcha solver. Optional: 8 Playwright browser actions and any number of MCP-bridged tools. | "Open Gmail and send X to Y", "Find all PDFs and zip them", "Open Excel and fill these rows". |
 
 ---
 
@@ -56,7 +56,7 @@ Store your Anthropic API key once in the OS keyring (never in plain text):
 uv run lucid setup
 ```
 
-Prefer zero API cost? Lucid also supports the Claude Code CLI as a backend — set `backend.mode: cli` in `data/settings.yaml` and every Answer/Teach request goes through your existing Claude subscription.
+Prefer zero API cost? Lucid also supports the Claude Code CLI as a backend - set `backend.mode: cli` in `data/settings.yaml` and every Answer/Teach request goes through your existing Claude subscription.
 
 ### 3. Run
 
@@ -64,7 +64,7 @@ Prefer zero API cost? Lucid also supports the Claude Code CLI as a backend — s
 uv run lucid
 ```
 
-A tray icon appears. Press **`Ctrl+Alt+J`** anywhere — the overlay pops up. Type what you want, pick a mode, hit Enter. The overlay docks to the top-right during Execute mode so you can watch progress while Claude works.
+A tray icon appears. Press **`Ctrl+Alt+J`** anywhere - the overlay pops up. Type what you want, pick a mode, hit Enter. The overlay docks to the top-right during Execute mode so you can watch progress while Claude works.
 
 ---
 
@@ -74,7 +74,7 @@ A tray icon appears. Press **`Ctrl+Alt+J`** anywhere — the overlay pops up. Ty
 Claude prefers labelled interactions: `click_element "Send"`, `focus_window "Gmail"`, `file_dialog_paste "C:\path\to.pdf"`. Pixel clicks are a last-resort fallback, not the default. When the model insists on a coordinate, Lucid's retry guard catches same-bucket repeats (±30 px) and nudges it to a different strategy.
 
 ### Native screenshot to clipboard
-Forget `PrintScreen`/`Win+Shift+S` dances. `screenshot_to_clipboard` captures the screen (or a specific monitor, or a region) directly into the Windows clipboard as a DIB. Paste it into Photoshop, Word, Outlook, any app that accepts an image — zero UI flicker.
+Forget `PrintScreen`/`Win+Shift+S` dances. `screenshot_to_clipboard` captures the screen (or a specific monitor, or a region) directly into the Windows clipboard as a DIB. Paste it into Photoshop, Word, Outlook, any app that accepts an image - zero UI flicker.
 
 ### Shell peek
 Need to know "where is this file" or "is this process running"? `run_shell` executes a short read-only command (`dir`, `Get-Process`, `where.exe`) in 10 s with a destructive-pattern denylist. No need to open a terminal.
@@ -93,7 +93,7 @@ lucid run create_invoice --var customer="Acme Inc." --var amount="1250"
 Workflows live in `data/workflows/` as JSON. Each replay re-plans the steps against the live screen via semantic intent, so UI drift (new theme, resized window) doesn't break them.
 
 ### Scheduled tasks
-Cron, intervals, one-shot, relative delays — all native, no external scheduler.
+Cron, intervals, one-shot, relative delays - all native, no external scheduler.
 
 ```powershell
 lucid schedule add --slug morning_report --cron "0 9 * * 1-5" --prompt "Open Gmail and summarise unread"
@@ -104,13 +104,13 @@ lucid schedule add --slug remind_me --in 30m --prompt "Write a Slack note to the
 When a task finishes, Lucid raises a Windows toast (success, timeout, or failure with exit code). Scheduler survives tray restart.
 
 ### Reference image attachments
-Paste a screenshot with `Ctrl+V` or click `📎 Attach image`. Claude sees your reference when planning. "Make my presentation look like this" — drop the image, describe the goal.
+Paste a screenshot with `Ctrl+V` or click `📎 Attach image`. Claude sees your reference when planning. "Make my presentation look like this" - drop the image, describe the goal.
 
 ### Long-task resilient mode
 Complex multi-step jobs get `--resilient`: 10× timeout (600 s default), 200-step budget, `[LONG-TASK MODE]` prefix that tells Claude to checkpoint every sub-goal. Combined with scheduler: kernel-level wall-clock kill as backstop.
 
 ### User profile (no hardcoded data)
-Lucid reads `data/profile.yaml` for who-you-are context — name, email, default browser, frequent folders, signature block, knowledge-source pointers. Nothing committed to git. A new user clones the repo, copies `profile.example.yaml`, and Lucid personalises itself without a single code change.
+Lucid reads `data/profile.yaml` for who-you-are context - name, email, default browser, frequent folders, signature block, knowledge-source pointers. Nothing committed to git. A new user clones the repo, copies `profile.example.yaml`, and Lucid personalises itself without a single code change.
 
 ### Memory that learns from use
 SQLite store under `data/memory.db` records three kinds of fact:
@@ -121,25 +121,25 @@ SQLite store under `data/memory.db` records three kinds of fact:
 Each new task retrieves the BM25-top-K relevant patterns and injects them as context. Lucid gets smarter per user, per day.
 
 ### Captcha solver (user-authorised)
-For captchas on accounts you own: detect reCAPTCHA v2 / Cloudflare Turnstile / image / audio, then hierarchical solve — checkbox → image-challenge via vision → audio → user-hand-off modal. Rate-limited (10/h default), opt-in, disabled for scheduled tasks.
+For captchas on accounts you own: detect reCAPTCHA v2 / Cloudflare Turnstile / image / audio, then hierarchical solve - checkbox → image-challenge via vision → audio → user-hand-off modal. Rate-limited (10/h default), opt-in, disabled for scheduled tasks.
 
 ### Discoverable UI
 The overlay has toolbar buttons for one-click access to the features users keep asking "where is X":
 - `📎 Attach image`
 - `💾 Workflows` (lists named workflows, click to run)
 - `🕘 Scheduled tasks` (lists, run-now, open JSON)
-- `📜 Actions` (toggle dock panel showing the last 10 Execute actions with timestamps — handy for demos and debugging)
-- `🎞 Steps` (Step Gallery — see below)
-- `🧠 Thoughts` (ThoughtChain — see below)
+- `📜 Actions` (toggle dock panel showing the last 10 Execute actions with timestamps - handy for demos and debugging)
+- `🎞 Steps` (Step Gallery - see below)
+- `🧠 Thoughts` (ThoughtChain - see below)
 
 ### 🎞 Step Gallery
-Every Execute run is journalled to `data/journals/<session>/`: a pair of WebP thumbnails (before + after) per tool call plus a one-line JSON record. Toggle `🎞 Steps` in the overlay to see the live grid — three columns of cards, each clickable to open a detail dialog with the full before/after pair, the raw tool params, and the outcome text. Old sessions are pruned automatically (`settings.journal.max_sessions`, default 30). Perfect for debugging "what did Lucid actually do at step 7?" and for showing real footage of a run.
+Every Execute run is journalled to `data/journals/<session>/`: a pair of WebP thumbnails (before + after) per tool call plus a one-line JSON record. Toggle `🎞 Steps` in the overlay to see the live grid - three columns of cards, each clickable to open a detail dialog with the full before/after pair, the raw tool params, and the outcome text. Old sessions are pruned automatically (`settings.journal.max_sessions`, default 30). Perfect for debugging "what did Lucid actually do at step 7?" and for showing real footage of a run.
 
 ### 🧠 ThoughtChain
 The model's narration and its tool-use plans land in a dedicated panel so you can read what Lucid is *thinking* without it cluttering the result pane. Streaming text appears live; every action gets a structured `🛠 plan: <action> <params>` line. Bounded history (default 200 entries) keeps the panel light during long runs.
 
 ### Cursor Halo
-A tiny coloured ring flashes at the click point the moment Lucid fires a coordinate action — blue for left click, orange for right click, purple for double click, green for drag, pink for type/key. 450 ms fade, click-through, multi-monitor aware. Off in `settings.overlay.cursor_halo: false` if you don't want it during screencasts.
+A tiny coloured ring flashes at the click point the moment Lucid fires a coordinate action - blue for left click, orange for right click, purple for double click, green for drag, pink for type/key. 450 ms fade, click-through, multi-monitor aware. Off in `settings.overlay.cursor_halo: false` if you don't want it during screencasts.
 
 ### Browser actions (Playwright, optional extra)
 With `lucid[browser]` installed and `settings.browser.enabled: true`, the model gains a DOM-level path for web work instead of pixel-clicking through Chrome:
@@ -178,7 +178,7 @@ servers:
 
 ### Safety
 - Password fields auto-detected; screenshots suppressed for blacklisted window titles.
-- Destructive actions (send / delete / format / drop / pay) trigger a modal — **Deny / Allow / Always this session**.
+- Destructive actions (send / delete / format / drop / pay) trigger a modal - **Deny / Allow / Always this session**.
 - `Ctrl+Alt+K` kill switch stops the loop within 500 ms.
 - Optional `auto_undo_on_stop`: pressing Stop sends Ctrl+Z to the foreground window.
 - Scheduled tasks pass through the same safety stack; destructive prompts are auto-denied in headless context by default.
@@ -214,7 +214,7 @@ lucid setup                         # (re-)store API key in keyring
 
 ## Settings
 
-`data/settings.yaml` — generated on first run, hand-editable:
+`data/settings.yaml` - generated on first run, hand-editable:
 
 ```yaml
 hotkey: "ctrl+alt+j"
@@ -276,7 +276,7 @@ mcp:                               # optional extra: pip install lucid[mcp]
   initialize_timeout_seconds: 15
 ```
 
-`data/profile.yaml` — who you are, never committed:
+`data/profile.yaml` - who you are, never committed:
 
 ```yaml
 name: "Your Name"
@@ -332,7 +332,7 @@ templates/              7 ship-in workflows (send_gmail, excel_new_sheet, …)
 config/                 pydantic-settings + keyring + profile loader
 ```
 
-Everything persistent lives under `data/` at the repo root (portable — no `%APPDATA%` leak). `data/` is git-ignored.
+Everything persistent lives under `data/` at the repo root (portable - no `%APPDATA%` leak). `data/` is git-ignored.
 
 ---
 
@@ -346,10 +346,10 @@ uv run ruff check src/             # style
 uv run pre-commit run --all-files  # lint + format + spelling
 ```
 
-File issues at https://github.com/ertugrulakben/lucid/issues — please include `lucid-version`, OS build, and `data/logs/lucid.log` tail.
+File issues at https://github.com/ertugrulakben/lucid/issues - please include `lucid-version`, OS build, and `data/logs/lucid.log` tail.
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Do what you want, but if you ship a fork, credit `Lucid Contributors`.
+MIT - see [LICENSE](LICENSE). Do what you want, but if you ship a fork, credit `Lucid Contributors`.

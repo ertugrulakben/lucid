@@ -2,36 +2,36 @@
 
 All notable changes to Lucid are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.6.0] — 2026-05-26
+## [0.6.0] - 2026-05-26
 
 Reasoning-transparency + ecosystem release. Four independent features, each
 behind its own setting flag so vanilla v0.5 installs upgrade cleanly.
 
 ### Added
 
-- **Step Gallery** — visual before/after timeline for every Execute run. Each
+- **Step Gallery** - visual before/after timeline for every Execute run. Each
   tool call writes a pair of WebP thumbnails plus a one-line JSON record to
   `data/journals/<session>/`. The overlay grows a `🎞 Steps` toggle that opens
   a 3-column grid; clicking a cell opens a detail dialog with the full
   before/after pair, the tool params, and the raw outcome. Old sessions are
   pruned automatically (`settings.journal.max_sessions`, default 30).
-- **ThoughtChain panel** — live reasoning view. The Execute loop emits a
+- **ThoughtChain panel** - live reasoning view. The Execute loop emits a
   `[thought] ...` stream prefix carrying the LLM's narration plus a
   structured `🛠 plan: ...` line for each tool_use block. The overlay's
   `🧠 Thoughts` toggle opens a bounded-deque viewer that auto-scrolls.
-- **Cursor Halo** — brief radial flash at the click target the moment Lucid
+- **Cursor Halo** - brief radial flash at the click target the moment Lucid
   fires a coordinate action. Frameless click-through PySide6 widget, fades
   out in 450 ms via `QPropertyAnimation`. Action-type colour coding (blue
   for left click, orange for right click, purple for double click, green
   for drag, pink for type/key).
-- **Browser actions** (optional extra `lucid[browser]`) — eight
+- **Browser actions** (optional extra `lucid[browser]`) - eight
   Playwright-backed actions: `browser_launch`, `browser_goto`,
   `browser_click_selector`, `browser_fill`, `browser_press`,
   `browser_wait_for`, `browser_screenshot`, `browser_close`. One shared
   Chromium context per Execute run; ExecuteMode.reset() and
   AppController.shutdown() tear it down. The system prompt grows a
   `WEB OTOMASYON` block when `settings.browser.enabled = true`.
-- **MCP bridge** (optional extra `lucid[mcp]`) — spawn external Model
+- **MCP bridge** (optional extra `lucid[mcp]`) - spawn external Model
   Context Protocol servers over stdio and surface each advertised tool as
   a Lucid action named `mcp_<server>_<tool>`. Server manifest at
   `data/mcp_servers.yaml`; `${ENV_VAR}` expansion in the env map at load
@@ -49,9 +49,9 @@ behind its own setting flag so vanilla v0.5 installs upgrade cleanly.
 
 ### New stream prefixes
 
-- `[step] <session_dir>|<id>|<action>|<thumb>|<outcome>` — Step Journal record.
-- `[thought] <text>` — narration or `🛠 plan: ...` line for ThoughtChain.
-- `[halo] <action>|<x>,<y>` — Cursor Halo flash request.
+- `[step] <session_dir>|<id>|<action>|<thumb>|<outcome>` - Step Journal record.
+- `[thought] <text>` - narration or `🛠 plan: ...` line for ThoughtChain.
+- `[halo] <action>|<x>,<y>` - Cursor Halo flash request.
 
 ### Settings
 
@@ -68,7 +68,7 @@ on-disk journal verification. Real Chromium and real MCP-server-over-stdio
 paths are exercised by the existing test runner; opt-in flags keep them
 silent when the extras are missing.
 
-## [0.5.0] — 2026-05-19
+## [0.5.0] - 2026-05-19
 
 First public open-source release.
 
@@ -104,7 +104,7 @@ First public open-source release.
 - Windows 10/11 primary platform (UI Automation backbone is Windows-only); Linux/macOS partial via direct mouse/keyboard.
 - MIT licensed.
 
-## [Unreleased — pre-public history]
+## [Unreleased - pre-public history]
 
 ### Added (v1.0 roadmap, 2026-05-03)
 - **i18n with Project Fluent**: full English + Turkish locale bundles for UI,
@@ -183,6 +183,6 @@ First public open-source release.
 - Windows installer (PyInstaller + NSIS).
 - GitHub Actions CI (lint, test, build).
 
-## [0.1.0] — TBD
+## [0.1.0] - TBD
 
 First public release.

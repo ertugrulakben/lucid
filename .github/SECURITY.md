@@ -21,7 +21,7 @@ Include:
 - Affected versions
 - Suggested fix (if any)
 
-Please do **not** open a public issue for security-sensitive reports — they reach the maintainer through the private advisory channel.
+Please do **not** open a public issue for security-sensitive reports - they reach the maintainer through the private advisory channel.
 
 ## Disclosure Window
 

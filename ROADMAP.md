@@ -8,7 +8,7 @@ Take Lucid from v0.1.0 (alpha, ~9.1K LOC, 73 Python files) to v1.0 production OS
 
 ## Phases
 
-### Phase 0 — Pre-flight (1.5 days)
+### Phase 0 - Pre-flight (1.5 days)
 
 OSS governance, demo assets, CI hardening.
 
@@ -22,9 +22,9 @@ OSS governance, demo assets, CI hardening.
 - `docs/hero.png` + `docs/demo.gif`
 - CI: remove `continue-on-error` from mypy, add cache, add Linux runner
 
-### Phase 1 — Foundation refactor (4 days)
+### Phase 1 - Foundation refactor (4 days)
 
-#### 1a. i18n — Project Fluent
+#### 1a. i18n - Project Fluent
 
 ```
 src/lucid/i18n/
@@ -38,7 +38,7 @@ src/lucid/i18n/
 Bootstrap: `i18n.init()` runs BEFORE Qt or argparse import.
 Resolution: `LUCID_LOCALE` env → `settings.locale` → `QLocale.system().name()` → `"en"`.
 
-CI guard: `scripts/check_no_hardcoded_text.py` — fail PR on non-ASCII chars outside `_("...")`, comments, docstrings.
+CI guard: `scripts/check_no_hardcoded_text.py` - fail PR on non-ASCII chars outside `_("...")`, comments, docstrings.
 
 Library: `fluent.runtime==0.4.0`.
 
@@ -50,7 +50,7 @@ Library: `fluent.runtime==0.4.0`.
 - `CaptchaSettings.max_per_hour = 10`
 - `BackendSettings.lm_studio_model` default `""`
 
-#### 1c. CLI — Typer 0.12
+#### 1c. CLI - Typer 0.12
 
 `__main__.py` 570 LOC argparse → ~250 LOC Typer subcommand tree.
 
@@ -62,7 +62,7 @@ Subcommands: `run, exec, teach, schedule, memory, config, doctor, version`.
 
 3 tranches: `executor/actions.py` → `OSError, pyautogui.FailSafeException, uiautomation.LookupError`. `agent/execute_mode.py` → `anthropic.APIError, anthropic.RateLimitError`. Rest get `# noqa: BLE001`.
 
-### Phase 2 — Architecture upgrades (6 days)
+### Phase 2 - Architecture upgrades (6 days)
 
 #### 2a. Plugin system
 
@@ -78,7 +78,7 @@ Same pattern for LLM backends (`lucid.llm.providers` entry-point).
 
 4 backend production hardening: streaming retry, subprocess timeout, connection probe, Kimi WIP→production.
 
-#### 2b. Set-of-Mark grounding — UIA + OmniParser bundled
+#### 2b. Set-of-Mark grounding - UIA + OmniParser bundled
 
 ```
 src/lucid/grounding/
@@ -101,7 +101,7 @@ Planner: Sonnet/Opus. Verification + disambiguation: Haiku 4.5.
 
 Bench fixture: 5 sabit task. Goal: -40% cost, success rate ±2%.
 
-### Phase 3 — Quality & coverage (3.5 days)
+### Phase 3 - Quality & coverage (3.5 days)
 
 70% line / 60% branch coverage. Currently ~30/73 modules tested.
 
@@ -113,7 +113,7 @@ Mypy strict: `executor/, agent/, llm/`.
 
 CI matrix: Windows + Linux (`QT_QPA_PLATFORM=offscreen`).
 
-### Phase 4 — Distribution & polish (3 days)
+### Phase 4 - Distribution & polish (3 days)
 
 - Auto-updater (50 LOC, GitHub Releases API)
 - Signed manifest (Ed25519, repo public key)
@@ -121,7 +121,7 @@ CI matrix: Windows + Linux (`QT_QPA_PLATFORM=offscreen`).
 - `examples/` folder (6 scripts)
 - Marketing assets (60s screen recording, social preview)
 
-### Phase 5 — Benchmark & launch (1.5 days)
+### Phase 5 - Benchmark & launch (1.5 days)
 
 - WindowsAgentArena 12-task subset
 - ScreenSpot SoM grounding accuracy

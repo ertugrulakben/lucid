@@ -46,6 +46,6 @@ name `lucid` and can be removed via your OS credential manager.
 ## Running fully offline
 
 Set `backend.mode: cli` with no Claude CLI installed, or set the provider to
-an unreachable endpoint — Lucid will refuse to submit prompts. The
+an unreachable endpoint - Lucid will refuse to submit prompts. The
 hotkey, overlay, and recorder still work; Mode B workflows can be recorded
 locally and replayed later once a provider is available.

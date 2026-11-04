@@ -15,10 +15,10 @@ Lucid targets Python 3.10+. All development happens against Windows 10/11. Linux
 
 ## Code Style
 
-- `ruff check .` — lint
-- `ruff format .` — format
-- `black src tests` — additional formatting parity
-- `mypy src` — type check (non-strict for now)
+- `ruff check .` - lint
+- `ruff format .` - format
+- `black src tests` - additional formatting parity
+- `mypy src` - type check (non-strict for now)
 
 CI runs all four on every pull request. Please run them locally before pushing.
 
@@ -53,4 +53,4 @@ Open an issue on GitHub with:
 
 ## Security
 
-Do not open public issues for security problems. Email `security@lucid.app` (placeholder — set real address before launch).
+Do not open public issues for security problems. Email `security@lucid.app` (placeholder - set real address before launch).
