@@ -179,7 +179,7 @@ servers:
 ### Safety
 - Password fields auto-detected; screenshots suppressed for blacklisted window titles.
 - Destructive actions (send / delete / format / drop / pay) trigger a modal - **Deny / Allow / Always this session**.
-- `Ctrl+Alt+K` kill switch stops the loop within 500 ms.
+- `Ctrl+Shift+K` kill switch stops the loop within 500 ms.
 - Optional `auto_undo_on_stop`: pressing Stop sends Ctrl+Z to the foreground window.
 - Scheduled tasks pass through the same safety stack; destructive prompts are auto-denied in headless context by default.
 
@@ -229,7 +229,7 @@ backend:
 
 safety:
   destructive_confirm: true
-  kill_switch_hotkey: "ctrl+alt+k"
+  kill_switch_hotkey: "ctrl+shift+k"
   pause_seconds: 0.15
 
 executor:

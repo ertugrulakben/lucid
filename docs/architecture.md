@@ -87,6 +87,6 @@ while steps < max:
     messages.append(assistant_blocks, tool_results)
 ```
 
-The kill-switch hotkey (`Ctrl+Alt+K` by default) is registered only while a
+The kill-switch hotkey (`Ctrl+Shift+K` by default) is registered only while a
 Mode C loop is running; it sets the same `threading.Event` the loop polls, so
 cancellation propagates within one tick.

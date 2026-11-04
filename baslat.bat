@@ -12,7 +12,7 @@ title Lucid v0.5 Launcher
 echo.
 echo   ================================================================
 echo     Lucid v0.5 - Masaustu AI Ajani
-echo     Ctrl+Alt+J ile overlay, Ctrl+Alt+K ile kill switch
+echo     Ctrl+Alt+J ile overlay, Ctrl+Shift+K ile kill switch
 echo     Loglar: data\logs\lucid.log
 echo   ================================================================
 echo.
@@ -44,10 +44,11 @@ if not exist ".venv\Scripts\pythonw.exe" (
     echo   [2/4] .venv hazir.
 )
 
-REM -- 3) .env uyarisi --------------------------------------------------
-if not exist "..\..\.env" if not exist ".env" (
-    echo   [!] .env yok. ANTHROPIC_API_KEY olmadan Execute calismaz.
-    echo       Elle kur: uv run lucid setup
+REM -- 3) API anahtari hatirlatmasi ------------------------------------
+REM Lucid .env okumaz: anahtar keyring'de (lucid setup) ya da LUCID_ANTHROPIC_API_KEY'de durur.
+if not defined LUCID_ANTHROPIC_API_KEY (
+    echo   [i] Anahtar keyring'de degilse Execute calismaz: uv run lucid setup
+    echo       Kontrol: uv run lucid doctor
 )
 
 REM -- 4) Tray'i WMI ile tam detach baslat ------------------------------

@@ -4,10 +4,10 @@ Run with::
 
     uv run python examples/01_answer_screenshot.py "what app am I in?"
 
-Requires ``ANTHROPIC_API_KEY`` (or ``LUCID_ANTHROPIC_API_KEY``) in the
-environment, OR a configured ``backend.mode`` (``cli`` / ``lm_studio`` /
-``kimi``) so that ``create_provider(settings)`` resolves to a working
-client.
+Requires an API key stored with ``lucid setup`` (OS keyring) or set as
+``LUCID_ANTHROPIC_API_KEY``, OR a configured ``backend.mode`` (``cli`` /
+``lm_studio``) so that ``create_provider(settings)`` resolves to a working
+client. ``lucid doctor`` shows which of these is in place.
 """
 
 from __future__ import annotations

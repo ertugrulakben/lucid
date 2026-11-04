@@ -60,7 +60,8 @@ class ExecutorSettings(BaseModel):
 class BackendSettings(BaseModel):
     """Which LLM drives Answer/Teach/Execute.
 
-    mode="api"       → direct Anthropic SDK. Needs ANTHROPIC_API_KEY in keyring.
+    mode="api"       → direct Anthropic SDK. Needs the key in the OS keyring
+                       (``lucid setup``) or LUCID_ANTHROPIC_API_KEY.
     mode="cli"       → Claude Code CLI subprocess (uses existing subscription).
     mode="lm_studio" → local LM Studio / Ollama / any OpenAI-compatible endpoint.
                        Zero API cost, fully offline. Configure url + model.
