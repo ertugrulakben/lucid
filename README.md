@@ -255,6 +255,8 @@ journal:
   max_sessions: 30                 # oldest sessions pruned automatically
   thumb_width: 480                 # WebP thumbnail width in px
   webp_quality: 70
+  record_text: false               # typed text is stored masked (length only)
+  retention_hours: 0               # 0 = keep until max_sessions
 
 overlay:
   opacity: 0.78

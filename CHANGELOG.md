@@ -2,6 +2,32 @@
 
 All notable changes to Lucid are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Security
+
+- Typed text, passwords included, no longer reaches disk or the screen in
+  clear. The Step Gallery journal (`journals\<session>\index.jsonl`) stored it
+  verbatim, `lucid.log` logged it in full when it was shorter than 40
+  characters, the action-log and Thoughts panels showed its first 30
+  characters, and `browser_fill` echoed it in its outcome. The text of
+  `type`, `type_text` and `browser_fill` is now replaced by its length;
+  `journal.record_text` (off by default) keeps it in the journal for
+  debugging.
+- The final proof screenshot honours `screenshot.persist`: with persistence
+  off, nothing is captured or saved.
+- `screenshot.retention_hours` (screenshots and proofs) and
+  `scheduler.log_retention_days` are now enforced, at start-up and before
+  every Execute run. The new `journal.retention_hours` (0, off, by default)
+  adds an age limit to the Step Gallery.
+
+### Fixed
+
+- `docs/privacy.md` lists every folder Lucid writes, what it holds and for how
+  long. It no longer claims that password fields are suppressed before the
+  screenshot is taken, and it states that a teach-mode recording, typed
+  characters included, is sent to the provider when it is summarised.
+
 ## [0.6.1] - 2026-11-04
 
 Closes the technical items of ROADMAP Phase 0. The only runtime change is the

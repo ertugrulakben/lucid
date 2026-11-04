@@ -14,11 +14,17 @@ When you submit a prompt:
 
 Replay of a teach-mode workflow sends the same payload for every step.
 
+When a teach-mode recording is summarised, the recorded workflow is sent too
+(trimmed to 20 kB): clicks, key presses and the characters typed while
+recording.
+
 ## Never transmitted
 
 - API keys (stored in the OS keyring; never included in prompts or logs).
-- Contents of password fields (detected via UI Automation
-  `IsPassword=True` and suppressed before the screenshot is taken).
+- Contents of password fields read from the screen: the accessibility tree
+  carries names and roles, never field values, and password fields show
+  masked characters. A password you write into your prompt is sent with the
+  prompt, and the model sees the text it types.
 - Any window whose title matches `screenshot.blacklist_titles`.
 
 ## Persisted locally
@@ -31,9 +37,16 @@ read-only, or the folder named by `LUCID_DATA_DIR`. `lucid status` prints it.
 | ---- | -------- | -------- |
 | `settings.yaml` | data folder | Hotkey, provider, safety settings. No secrets. |
 | `install_id` | data folder | Random UUID used for opt-in telemetry. |
-| `logs\lucid.log` | data folder | Action names and sizes. Never prompt text, never screenshot bytes. |
-| Screenshots | data folder, `screenshots\` | PNG files of captured screens while `screenshot.persist` is on (the default). `screenshot.retention_hours` is not enforced yet, so they stay until you delete them. |
-| Workflows | data folder, `workflows\` | Teach-mode JSON files. Stays local unless you export. |
+| `logs\lucid.log` | data folder | Action names and parameters. Typed text is masked to its length; never prompt text, never screenshot bytes. |
+| Screenshots | data folder, `screenshots\` | PNG files of captured screens while `screenshot.persist` is on (the default). Deleted after `screenshot.retention_hours` (24). |
+| Proofs | data folder, `proofs\` | The final screenshot of each Execute run, while `screenshot.persist` is on. Deleted after `screenshot.retention_hours`. |
+| Step Gallery | data folder, `journals\` | Before/after thumbnails of every Execute step and `index.jsonl` with the action parameters. Typed text is masked to its length unless `journal.record_text` is on. The newest `journal.max_sessions` (30) are kept; `journal.retention_hours` (0, off) adds an age limit. |
+| Scheduled runs | data folder, `schedule_logs\` | Output of each scheduled run (typed text masked). Deleted after `scheduler.log_retention_days` (14). |
+| `memory.db` | data folder | Task goals with a one-line summary, proof screenshot paths, and facts when `memory.auto_fact_extract` is on. |
+| Workflows | data folder, `workflows\` | Teach-mode JSON files, including the characters typed while recording. Stays local unless you export. |
+
+Retention is enforced when Lucid starts and before every Execute run. A value
+of 0 keeps that folder as it is.
 
 ## Telemetry
 
@@ -45,10 +58,8 @@ endpoint URL is user-configurable; if unset, telemetry is a no-op.
 
 Delete the data folder to wipe local data; uninstalling Lucid does not remove
 `%APPDATA%\Lucid\` or a `LUCID_DATA_DIR` folder. Besides the files above it
-holds `memory.db`, `profile.yaml` and the Step Gallery `journals\`
-(before/after screenshots of Execute runs). The OS keyring entry is stored
-under the service name `lucid` and can be removed via your OS credential
-manager.
+holds `profile.yaml`. The OS keyring entry is stored under the service name
+`lucid` and can be removed via your OS credential manager.
 
 ## Running fully offline
 
