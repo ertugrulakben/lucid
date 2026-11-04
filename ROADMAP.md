@@ -10,14 +10,14 @@ Take Lucid from v0.1.0 (alpha, ~9.1K LOC, 73 Python files) to v1.0 production OS
 
 ### Phase 0 - Pre-flight (1.5 days)
 
-OSS governance, demo assets, CI hardening. Status: technical items done, three maintainer items open.
+OSS governance, demo assets, CI hardening. Status: technical items done, two maintainer items open.
 
 - [x] `.github/CODE_OF_CONDUCT.md` (Contributor Covenant 2.1)
 - [x] `.github/SECURITY.md` (90-day disclosure window)
 - [x] `.github/PULL_REQUEST_TEMPLATE.md`
 - [ ] `.github/FUNDING.yml` - template only; maintainer decides to fill it in or drop it
 - [x] Dependency updates - `dependabot.yml` version updates were dropped on 2026-10-06 (maintenance mode): ranges are bumped manually after a local test run
-- [ ] Dependabot security alerts - off in the repository settings; the manual update policy relies on them, so the maintainer switches them on
+- [x] Dependabot security alerts - on in the repository settings since 2026-11-04; the manual update policy relies on them
 - [x] `.pre-commit-config.yaml` (ruff, ruff-format, codespell, check-yaml, end-of-file-fixer, detect-private-key, detect-secrets, a guard against committing local data and secret files)
 - [x] `pyproject.toml` URL fix + `Alpha → Beta`
 - [ ] `docs/hero.png` + `docs/demo.gif` - generated placeholders (`scripts/generate_assets.py`); a real capture is pending
