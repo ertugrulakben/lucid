@@ -10,6 +10,10 @@ Variable substitution (v1.1): recorded ``text`` fields may contain
 ``{{placeholder}}`` tokens that were captured when the workflow was
 taught. At replay time callers pass a ``variables`` dict (e.g.
 ``{customer: "Acme Inc."}``) and we substitute before executing.
+
+Secret variables (text typed into a password field while teaching) never
+reach the model or the screen: their steps are typed directly, without a
+planning call, and the replay stops when the value was not supplied.
 """
 
 from __future__ import annotations
@@ -18,7 +22,7 @@ import logging
 import re
 import threading
 import time
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from typing import Any
 
 from lucid.capture import ContextSnapshot
@@ -27,7 +31,8 @@ from lucid.executor import Actions
 from lucid.llm.anthropic_client import build_computer_tool
 from lucid.llm.provider import LLMProvider, Message
 from lucid.llm.schemas import ActionBlock
-from lucid.recorder.workflow import Workflow
+from lucid.privacy import mask_text
+from lucid.recorder.workflow import Workflow, WorkflowStep
 
 log = logging.getLogger("lucid.replayer")
 
@@ -55,6 +60,12 @@ def apply_variables(value: Any, variables: dict[str, str]) -> Any:
     return value
 
 
+def shown_variables(variables: dict[str, str], workflow: Workflow) -> dict[str, str]:
+    """Variables as they may appear on screen and in logs: secret values masked."""
+    secret = {v.name for v in workflow.variables if v.secret}
+    return {k: mask_text(str(v)) if k in secret else v for k, v in variables.items()}
+
+
 class SemanticReplayer:
     def __init__(self, settings: Settings, provider: LLMProvider) -> None:
         self.settings = settings
@@ -68,19 +79,27 @@ class SemanticReplayer:
         variables: dict[str, str] | None = None,
     ) -> Iterator[str]:
         variables = dict(variables or {})
+        secret = {v.name for v in workflow.variables if v.secret}
+        public = {k: v for k, v in variables.items() if k not in secret}
         yield f"Replaying: {workflow.name} ({len(workflow.steps)} steps)\n"
         if variables:
-            rendered = ", ".join(f"{k}={v!r}" for k, v in variables.items())
-            yield f"Variables: {rendered}\n"
+            shown = shown_variables(variables, workflow)
+            yield "Variables: " + ", ".join(f"{k}={v!r}" for k, v in shown.items()) + "\n"
 
         for step in workflow.steps:
             if cancel.is_set():
                 yield "\n[cancelled]\n"
                 return
 
-            resolved_intent = apply_variables(step.intent, variables)
-            resolved_text = apply_variables(step.text, variables) if step.text else None
-            resolved_selector = apply_variables(step.selector, variables)
+            if step.metadata.get("secret"):
+                typed = yield from self._type_secret(step, variables)
+                if not typed:
+                    return
+                continue
+
+            resolved_intent = apply_variables(step.intent, public)
+            resolved_text = apply_variables(step.text, public) if step.text else None
+            resolved_selector = apply_variables(step.selector, public)
             resolved_keys = step.keys
             resolved_fallback = step.fallback_coord
 
@@ -137,3 +156,24 @@ class SemanticReplayer:
             time.sleep(self.settings.safety.pause_seconds)
 
         yield "\n[replay done]\n"
+
+    def _type_secret(
+        self, step: WorkflowStep, variables: dict[str, str]
+    ) -> Generator[str, None, bool]:
+        """Type a password-field step from its secret variable; False stops the replay.
+
+        The focus is already in the field (the recorded click or Tab before it),
+        so no planning call is made and the value never reaches the model.
+        """
+        match = _PLACEHOLDER_RE.search(step.text or "")
+        name = match.group(1) if match else ""
+        yield f"\nstep {step.index + 1}: type {{{{{name}}}}} into the password field\n"
+        value = str(variables.get(name) or "")
+        if not value:
+            yield f"  -> no value for {{{{{name}}}}}; replay stopped (pass --var {name}=...)\n"
+            return False
+        action = ActionBlock(id=f"secret-{step.index}", action="type", params={"text": value})
+        result = self.actions.run(action)
+        yield f"  -> type: {result}\n"
+        time.sleep(self.settings.safety.pause_seconds)
+        return True

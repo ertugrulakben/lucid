@@ -55,7 +55,7 @@ from lucid.memory.store import MemoryStore
 from lucid.privacy import apply_retention, redact_params
 from lucid.recorder.registry import WorkflowEntry, WorkflowRegistry
 from lucid.recorder.workflow import load_workflow
-from lucid.replayer.semantic_replay import SemanticReplayer
+from lucid.replayer.semantic_replay import SemanticReplayer, shown_variables
 from lucid.safety.captcha import CaptchaSolver, detect_captcha
 
 log = logging.getLogger("lucid.agent.execute")
@@ -697,7 +697,7 @@ class ExecuteMode:
         def _replay() -> Iterator[str]:
             yield f"[workflow] matched {entry.slug} (via {first_line!r})\n"
             if variables:
-                yield f"[workflow] variables: {variables}\n"
+                yield f"[workflow] variables: {shown_variables(variables, workflow)}\n"
             if missing:
                 yield (
                     f"[workflow] missing required variable(s): {', '.join(missing)}\n"

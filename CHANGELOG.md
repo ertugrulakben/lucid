@@ -14,6 +14,15 @@ All notable changes to Lucid are documented here. Format follows [Keep a Changel
   `type`, `type_text` and `browser_fill` is now replaced by its length;
   `journal.record_text` (off by default) keeps it in the journal for
   debugging.
+- Teach mode no longer records what you type into a password field (UI
+  Automation `IsPassword`). Before, every key went into the workflow JSON and
+  the raw recording was sent to the provider for the summary. The field now
+  becomes a `{{secret_N}}` step backed by a secret variable. At replay the
+  value comes from `--var` or from your prompt (a prompt reaches the model as
+  always); it is typed without a planning call to the model and shown masked
+  in the replay output. Without a value the replay stops instead of typing the
+  placeholder. Workflows recorded before this change may still contain
+  passwords: review or re-record them.
 - MCP tool arguments whose name looks like a secret (`password`, `token`,
   `apiKey`, `auth` ...) are masked the same way in the journal, nested
   objects included; `journal.record_text` keeps them verbatim as well.

@@ -16,7 +16,7 @@ Replay of a teach-mode workflow sends the same payload for every step.
 
 When a teach-mode recording is summarised, the recorded workflow is sent too
 (trimmed to 20 kB): clicks, key presses and the characters typed while
-recording.
+recording, except in password fields (see Workflows below).
 
 ## Never transmitted
 
@@ -43,7 +43,7 @@ read-only, or the folder named by `LUCID_DATA_DIR`. `lucid status` prints it.
 | Step Gallery | data folder, `journals\` | Before/after thumbnails of every Execute step and `index.jsonl` with the action parameters. Typed text, and MCP tool arguments named like a secret (password, token, API key, auth ...), are masked unless `journal.record_text` is on. The newest `journal.max_sessions` (30) are kept; `journal.retention_hours` (0, off) adds an age limit. |
 | Scheduled runs | data folder, `schedule_logs\` | Output of each scheduled run (typed text masked). Deleted after `scheduler.log_retention_days` (14). |
 | `memory.db` | data folder | Task goals with a one-line summary, proof screenshot paths, and facts when `memory.auto_fact_extract` is on. |
-| Workflows | data folder, `workflows\` | Teach-mode JSON files, including the characters typed while recording. Stays local unless you export. |
+| Workflows | data folder, `workflows\` | Teach-mode JSON files, including the characters typed while recording. What you type into a password field (UI Automation `IsPassword`) is not recorded: it becomes a `{{secret_N}}` placeholder that you supply when you replay (`--var secret_1=...`); the replay types it without sending it to the model and shows it masked. Stays local unless you export. |
 
 Retention is enforced when Lucid starts and before every Execute run. A value
 of 0 keeps that folder as it is. Only entries named the way Lucid names its

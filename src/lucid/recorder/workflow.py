@@ -36,12 +36,18 @@ class WorkflowStep:
 
 @dataclass
 class WorkflowVariable:
-    """A placeholder the user fills in at replay time."""
+    """A placeholder the user fills in at replay time.
+
+    ``secret`` marks text typed into a password field while teaching: it was
+    never recorded, so the user supplies it at replay, and the replayer types
+    it without showing it to the model or on screen.
+    """
 
     name: str
     description: str = ""
     example: str = ""
     required: bool = True
+    secret: bool = False
 
 
 @dataclass
@@ -114,6 +120,19 @@ class Workflow:
         return path
 
 
+def merge_variables(
+    recorded: list[WorkflowVariable], proposed: list[WorkflowVariable]
+) -> list[WorkflowVariable]:
+    """The variables the summary proposes, keeping the recorder's secret ones.
+
+    Secret variables stand for password fields that were never recorded;
+    dropping them would leave their steps without a value at replay.
+    """
+    secret = [v for v in recorded if v.secret]
+    names = {v.name for v in secret}
+    return secret + [v for v in proposed if v.name not in names]
+
+
 def load_workflow(path: Path) -> Workflow:
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     steps_raw = data.get("steps", [])
@@ -125,6 +144,7 @@ def load_workflow(path: Path) -> Workflow:
             description=str(v.get("description", "")),
             example=str(v.get("example", "")),
             required=bool(v.get("required", True)),
+            secret=bool(v.get("secret", False)),
         )
         for v in variables_raw
         if isinstance(v, dict) and v.get("name")

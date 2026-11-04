@@ -30,7 +30,7 @@ from lucid.capture import ContextSnapshot
 from lucid.llm.provider import LLMProvider, Message
 from lucid.recorder import WorkflowRecorder
 from lucid.recorder.registry import WorkflowRegistry
-from lucid.recorder.workflow import Workflow, WorkflowVariable, slugify
+from lucid.recorder.workflow import Workflow, WorkflowVariable, merge_variables, slugify
 
 log = logging.getLogger("lucid.agent.teach")
 
@@ -158,7 +158,7 @@ class TeachMode:
         if metadata.tags:
             workflow.tags = metadata.tags
         if metadata.variables:
-            workflow.variables = metadata.variables
+            workflow.variables = merge_variables(workflow.variables, metadata.variables)
 
         path = workflow.save(self.settings.workflows_dir)
         try:
