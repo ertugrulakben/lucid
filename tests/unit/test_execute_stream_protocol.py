@@ -31,8 +31,17 @@ class _ScriptedProvider(LLMProvider):
     def __init__(self) -> None:
         self.turns = 0
 
-    def stream(self, messages, *, system=None, tools=None, max_tokens=2048,
-               model=None, cache_system=False, cache_tools=False) -> Iterator[StreamEvent]:
+    def stream(
+        self,
+        messages,
+        *,
+        system=None,
+        tools=None,
+        max_tokens=2048,
+        model=None,
+        cache_system=False,
+        cache_tools=False,
+    ) -> Iterator[StreamEvent]:
         self.turns += 1
         if self.turns == 1:
             # Narrate, then emit a single click action so the loop has work to do.
@@ -58,8 +67,12 @@ class _ScriptedProvider(LLMProvider):
         return {"type": "text", "text": text}
 
     def tool_result_block(self, tool_use_id, content, is_error=False) -> dict[str, Any]:
-        return {"type": "tool_result", "tool_use_id": tool_use_id, "content": content,
-                "is_error": is_error}
+        return {
+            "type": "tool_result",
+            "tool_use_id": tool_use_id,
+            "content": content,
+            "is_error": is_error,
+        }
 
 
 class _FakeActive:
@@ -104,9 +117,7 @@ def _run_one_step(tmp_path: Path, monkeypatch) -> tuple[list[str], Path]:
     # action dispatch at the Actions level.
     with patch("lucid.executor.actions.Actions.run", return_value="clicked (simulated)"):
         with patch.object(ExecuteMode, "_final_proof", return_value=iter(())):
-            chunks = list(
-                execute.run("Click the Send button.", _FakeSnapshot(), threading.Event())
-            )
+            chunks = list(execute.run("Click the Send button.", _FakeSnapshot(), threading.Event()))
     journals = list((tmp_path / "journals").iterdir())
     assert journals, "no journal session created"
     return chunks, journals[0]
@@ -125,7 +136,9 @@ def test_journal_jsonl_and_webp_written(tmp_path: Path, monkeypatch) -> None:
     _chunks, session_dir = _run_one_step(tmp_path, monkeypatch)
     index = session_dir / "index.jsonl"
     assert index.exists()
-    rows = [json.loads(line) for line in index.read_text(encoding="utf-8").splitlines() if line.strip()]
+    rows = [
+        json.loads(line) for line in index.read_text(encoding="utf-8").splitlines() if line.strip()
+    ]
     assert len(rows) == 1
     row = rows[0]
     assert row["action_name"] == "left_click"

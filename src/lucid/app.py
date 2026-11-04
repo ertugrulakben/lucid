@@ -86,7 +86,9 @@ class AppController(QObject):
         self.overlay.run_workflow_requested.connect(self._on_run_workflow)
         self.overlay.run_schedule_requested.connect(self._on_run_schedule)
         self.overlay.open_schedule_file_requested.connect(self._on_open_schedule_file)
-        self.overlay.halo_requested.connect(self._on_halo_requested, Qt.ConnectionType.QueuedConnection)
+        self.overlay.halo_requested.connect(
+            self._on_halo_requested, Qt.ConnectionType.QueuedConnection
+        )
         self.toggle_overlay.connect(self._on_toggle, Qt.ConnectionType.QueuedConnection)
 
         self.hotkey = HotkeyListener(settings.hotkey)

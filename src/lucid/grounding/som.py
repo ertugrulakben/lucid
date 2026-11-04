@@ -21,6 +21,7 @@ class Element:
     is the integer drawn on the overlay; the model refers to it. ``role``
     and ``label`` are descriptive but not load-bearing.
     """
+
     id: int
     bbox: tuple[int, int, int, int]
     role: str = ""
@@ -72,7 +73,9 @@ def detect_elements(
     return _renumber(elements)
 
 
-def overlay_image(image: Image.Image, elements: list[Element], *, settings: object | None = None) -> Image.Image:
+def overlay_image(
+    image: Image.Image, elements: list[Element], *, settings: object | None = None
+) -> Image.Image:
     """Return a copy of ``image`` with numbered boxes drawn over each element."""
     color = _read_str(settings, ("grounding", "label_color"), "#00C853")
     size = _read_int(settings, ("grounding", "label_size"), 14)
@@ -82,6 +85,7 @@ def overlay_image(image: Image.Image, elements: list[Element], *, settings: obje
 # --------------------------------------------------------------------------- #
 # UIA detector
 # --------------------------------------------------------------------------- #
+
 
 def _uia_detect(foreground_window) -> list[Element]:
     """Walk the foreground window's UIA tree and emit one Element per
@@ -163,19 +167,23 @@ def _iou(a: tuple[int, int, int, int], b: tuple[int, int, int, int]) -> float:
 
 
 def _renumber(elements: list[Element]) -> list[Element]:
-    return [Element(
-        id=i + 1,
-        bbox=e.bbox,
-        role=e.role,
-        label=e.label,
-        source=e.source,
-        extras=e.extras,
-    ) for i, e in enumerate(elements)]
+    return [
+        Element(
+            id=i + 1,
+            bbox=e.bbox,
+            role=e.role,
+            label=e.label,
+            source=e.source,
+            extras=e.extras,
+        )
+        for i, e in enumerate(elements)
+    ]
 
 
 # --------------------------------------------------------------------------- #
 # settings access (defensive -- never explodes when settings unavailable)
 # --------------------------------------------------------------------------- #
+
 
 def _read_mode(settings: object | None) -> str:
     return _read_str(settings, ("grounding", "mode"), "uia")

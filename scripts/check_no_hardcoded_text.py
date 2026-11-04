@@ -33,9 +33,7 @@ WATCHED_DIRS = (
     SRC_ROOT / "ui",
     SRC_ROOT / "agent",
 )
-WATCHED_FILES = (
-    SRC_ROOT / "__main__.py",
-)
+WATCHED_FILES = (SRC_ROOT / "__main__.py",)
 
 I18N_CALL_PATTERN = re.compile(r"\b_\s*\(")
 LOG_CALL_PATTERN = re.compile(r"\b(logger|log|logging)\.[a-z_]+\s*\(")
@@ -157,7 +155,7 @@ def main(argv: list[str]) -> int:
             print(f"{rel}:{lineno}:{col}  {message}")
             failures += 1
     if failures:
-        print(f"\n{failures} hardcoded-text offender(s). Wrap them in _(\"...\") or move to .ftl.")
+        print(f'\n{failures} hardcoded-text offender(s). Wrap them in _("...") or move to .ftl.')
         return 1
     return 0
 

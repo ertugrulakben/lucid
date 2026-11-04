@@ -86,13 +86,19 @@ def test_pick_release_list_accepts_prerelease_in_beta() -> None:
     assert chosen["tag_name"] == "v1.0.0-rc1"
 
 
-def test_check_for_update_returns_info_when_remote_is_newer(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_check_for_update_returns_info_when_remote_is_newer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     payload = {
         "tag_name": "v1.0.0",
         "body": "Big release notes here.",
         "prerelease": False,
         "assets": [
-            {"name": "Lucid-Setup-1.0.0.exe", "browser_download_url": "https://x/y.exe", "size": 99},
+            {
+                "name": "Lucid-Setup-1.0.0.exe",
+                "browser_download_url": "https://x/y.exe",
+                "size": 99,
+            },
         ],
     }
     _install_fake_httpx(monkeypatch, payload)

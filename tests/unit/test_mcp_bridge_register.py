@@ -82,15 +82,11 @@ def test_bridge_starts_server_and_calls_tool(echo_yaml: Path) -> None:
         assert "mcp_echo_add" in names
 
         ctx = registry.ActionContext(settings=settings)
-        result = registry.run(
-            "mcp_echo_echo", ctx, MCPActionParams(arguments={"text": "merhaba"})
-        )
+        result = registry.run("mcp_echo_echo", ctx, MCPActionParams(arguments={"text": "merhaba"}))
         assert "merhaba" in result
         assert "echo:" in result
 
-        add_result = registry.run(
-            "mcp_echo_add", ctx, MCPActionParams(arguments={"a": 2, "b": 5})
-        )
+        add_result = registry.run("mcp_echo_add", ctx, MCPActionParams(arguments={"a": 2, "b": 5}))
         assert "7" in add_result
     finally:
         bridge.stop()

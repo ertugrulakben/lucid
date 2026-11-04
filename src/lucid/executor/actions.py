@@ -483,8 +483,7 @@ class Actions:
                         return f"error: 'index' must be an integer, got {target_index!r}"
                     if not (1 <= idx < len(mons)):
                         return (
-                            f"error: monitor index {idx} out of range "
-                            f"(valid: 1..{len(mons) - 1})"
+                            f"error: monitor index {idx} out of range (valid: 1..{len(mons) - 1})"
                         )
                     mon = mons[idx]
                 else:

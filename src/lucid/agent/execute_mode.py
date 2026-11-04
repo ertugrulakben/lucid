@@ -490,10 +490,7 @@ class ExecuteMode:
                 # user can follow Lucid's mouse activity at a glance. Only emit
                 # when a coordinate is meaningful for this action.
                 halo_coord = _halo_coord_for(action)
-                if (
-                    halo_coord is not None
-                    and getattr(self.settings.overlay, "cursor_halo", True)
-                ):
+                if halo_coord is not None and getattr(self.settings.overlay, "cursor_halo", True):
                     yield f"\n[halo] {action.action}|{halo_coord[0]},{halo_coord[1]}\n"
 
                 time.sleep(self.settings.safety.pause_seconds)

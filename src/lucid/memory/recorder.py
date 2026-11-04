@@ -97,9 +97,7 @@ class FactRecorder:
         from lucid.llm.provider import Message
 
         user_text = (
-            f"Goal: {goal}\n"
-            f"Target app: {target_app or 'unknown'}\n"
-            f"Transcript:\n{transcript[:4000]}"
+            f"Goal: {goal}\nTarget app: {target_app or 'unknown'}\nTranscript:\n{transcript[:4000]}"
         )
         messages = [Message(role="user", content=[self.provider.text_block(user_text)])]
         buffer: list[str] = []

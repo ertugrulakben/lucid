@@ -122,8 +122,7 @@ def diff(before: ScreenState, after: ScreenState) -> str | None:
     changes: list[str] = []
     if before.foreground_hwnd != after.foreground_hwnd:
         changes.append(
-            f"foreground window changed: "
-            f"{before.foreground_title!r} → {after.foreground_title!r}"
+            f"foreground window changed: {before.foreground_title!r} → {after.foreground_title!r}"
         )
     if before.focused_name != after.focused_name or before.focused_role != after.focused_role:
         changes.append(
@@ -133,8 +132,7 @@ def diff(before: ScreenState, after: ScreenState) -> str | None:
         )
     if before.focused_value != after.focused_value:
         changes.append(
-            f"focused value changed: len {len(before.focused_value)} → "
-            f"{len(after.focused_value)}"
+            f"focused value changed: len {len(before.focused_value)} → {len(after.focused_value)}"
         )
     if before.cursor_xy != after.cursor_xy:
         changes.append(f"cursor moved {before.cursor_xy} → {after.cursor_xy}")

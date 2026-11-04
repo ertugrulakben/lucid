@@ -38,7 +38,9 @@ class OmniParserDetector:
     def from_settings(cls, settings: object | None) -> "OmniParserDetector":
         from .som import _read_str  # local import: same package
 
-        model_id = _read_str(settings, ("grounding", "omniparser_model_id"), "microsoft/OmniParser-v2.0")
+        model_id = _read_str(
+            settings, ("grounding", "omniparser_model_id"), "microsoft/OmniParser-v2.0"
+        )
         try:
             from lucid.config.settings import get_settings
 

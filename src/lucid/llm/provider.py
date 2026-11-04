@@ -74,6 +74,4 @@ def create_provider(settings) -> LLMProvider:
     try:
         return create_provider_by_name(name, settings)
     except ValueError as exc:
-        raise ValueError(
-            f"{exc}. Available providers: {', '.join(available_providers())}"
-        ) from exc
+        raise ValueError(f"{exc}. Available providers: {', '.join(available_providers())}") from exc

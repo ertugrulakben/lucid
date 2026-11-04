@@ -167,7 +167,6 @@ class AnthropicProvider(LLMProvider):
         except Exception as exc:  # -- last-resort, treat as fatal
             raise _FatalAnthropicError(str(exc)) from exc
 
-
     def image_block(self, img: Image.Image) -> dict[str, Any]:
         buf = io.BytesIO()
         img.save(buf, format="PNG", optimize=True)
@@ -332,7 +331,7 @@ def build_computer_tool(display_width: int, display_height: int) -> dict[str, An
                     "type": "array",
                     "items": {"type": "string"},
                     "description": (
-                        "Key names for `key` or `hold_key` " "(e.g. ['ctrl','t'] or ['return'])."
+                        "Key names for `key` or `hold_key` (e.g. ['ctrl','t'] or ['return'])."
                     ),
                 },
                 "scroll_direction": {
@@ -360,7 +359,7 @@ def build_computer_tool(display_width: int, display_height: int) -> dict[str, An
                     "minItems": 4,
                     "maxItems": 4,
                     "description": (
-                        "Optional [x, y, w, h] crop region for " "`screenshot_to_clipboard`."
+                        "Optional [x, y, w, h] crop region for `screenshot_to_clipboard`."
                     ),
                 },
                 "command": {
@@ -376,7 +375,7 @@ def build_computer_tool(display_width: int, display_height: int) -> dict[str, An
                     "type": "string",
                     "enum": ["cmd", "powershell", "bash"],
                     "description": (
-                        "Shell for `run_shell`. Default: cmd on Windows, " "bash elsewhere."
+                        "Shell for `run_shell`. Default: cmd on Windows, bash elsewhere."
                     ),
                 },
                 "timeout": {

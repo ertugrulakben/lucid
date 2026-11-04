@@ -38,7 +38,9 @@ def test_uia_mode_returns_list_even_when_uia_unavailable(monkeypatch: pytest.Mon
 def test_uia_plus_omniparser_falls_back_silently(monkeypatch: pytest.MonkeyPatch) -> None:
     """When OmniParser extras are not installed, cascade returns whatever UIA had."""
     image = Image.new("RGB", (200, 200), "white")
-    result = detect_elements(image, settings=_settings(mode="uia+omniparser"), foreground_window=None)
+    result = detect_elements(
+        image, settings=_settings(mode="uia+omniparser"), foreground_window=None
+    )
     assert isinstance(result, list)
 
 

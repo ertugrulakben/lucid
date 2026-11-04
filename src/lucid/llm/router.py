@@ -42,6 +42,7 @@ LOW_CONFIDENCE_MARKERS = (
 @dataclass
 class RouterDecision:
     """Records which model handled a particular call and why."""
+
     role: str  # "planner" | "verifier"
     model: str
     escalated: bool = False

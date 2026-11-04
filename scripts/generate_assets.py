@@ -21,7 +21,11 @@ for y in range(height):
 for radius in range(300, 0, -5):
     alpha = int(20 * (radius / 300))
     color = (20 + alpha, 30 + alpha, 60 + alpha)
-    draw.ellipse([width // 2 - radius, height // 3 - radius, width // 2 + radius, height // 3 + radius], outline=color, width=5)
+    draw.ellipse(
+        [width // 2 - radius, height // 3 - radius, width // 2 + radius, height // 3 + radius],
+        outline=color,
+        width=5,
+    )
 
 # Use default font (no external font dependency)
 try:
@@ -74,7 +78,9 @@ for i in range(num_frames):
     alpha_bar = min(255, int(255 * (i / 12))) if i < 12 else 255
     bar_color = (20, 25, 40, alpha_bar)
     # Draw rounded rect manually
-    d.rounded_rectangle([80, bar_y, w - 80, bar_y + 50], radius=25, fill=(25, 30, 50), outline=(50, 60, 90), width=2)
+    d.rounded_rectangle(
+        [80, bar_y, w - 80, bar_y + 50], radius=25, fill=(25, 30, 50), outline=(50, 60, 90), width=2
+    )
 
     # Text typing animation
     text = "Send email to Alice about the report"
@@ -107,9 +113,11 @@ for i in range(num_frames):
     if i > 24:
         log_alpha = min(255, int(255 * ((i - 24) / 8)))
         log_bg = (15, 18, 30)
-        d.rounded_rectangle([120, h - 100, w - 120, h - 20], radius=12, fill=log_bg, outline=(40, 50, 70), width=1)
-        d.text((140, h - 85), "click_element \"Send\"", fill="#66ff99", font=fnt)
-        d.text((140, h - 60), "typewrite \"Hello Alice...\"", fill="#66ff99", font=fnt)
+        d.rounded_rectangle(
+            [120, h - 100, w - 120, h - 20], radius=12, fill=log_bg, outline=(40, 50, 70), width=1
+        )
+        d.text((140, h - 85), 'click_element "Send"', fill="#66ff99", font=fnt)
+        d.text((140, h - 60), 'typewrite "Hello Alice..."', fill="#66ff99", font=fnt)
 
     frames.append(frame)
 

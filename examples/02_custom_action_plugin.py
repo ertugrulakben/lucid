@@ -39,7 +39,9 @@ def open_project(_ctx: ActionContext, params: OpenProjectParams) -> str:
     import sys
 
     if sys.platform == "win32":
-        subprocess.Popen(["explorer", str(target)], creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        subprocess.Popen(
+            ["explorer", str(target)], creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)
+        )
     elif sys.platform == "darwin":
         subprocess.Popen(["open", str(target)])
     else:

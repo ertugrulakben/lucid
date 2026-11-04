@@ -61,8 +61,11 @@ def test_record_increments_step_id(tmp_path: Path) -> None:
 def test_read_session_round_trip(tmp_path: Path) -> None:
     journal = StepJournal.open_session(tmp_path, goal="round trip")
     journal.record(
-        action_name="type", params={"text": "hello"},
-        before_image=_img(), after_image=_img(), outcome="typed",
+        action_name="type",
+        params={"text": "hello"},
+        before_image=_img(),
+        after_image=_img(),
+        outcome="typed",
     )
     records = read_session(journal.session_dir)
     assert len(records) == 1
@@ -95,7 +98,9 @@ def test_short_params_extracts_useful_keys() -> None:
     from lucid.journal.models import StepRecord
 
     record = StepRecord(
-        id=1, ts=0.0, action_name="click_element",
+        id=1,
+        ts=0.0,
+        action_name="click_element",
         params={"element_name": "Send", "element_role": "Button"},
         outcome="ok",
     )
@@ -107,7 +112,10 @@ def test_outcome_one_line_truncates() -> None:
     from lucid.journal.models import StepRecord
 
     record = StepRecord(
-        id=1, ts=0.0, action_name="x", params={},
+        id=1,
+        ts=0.0,
+        action_name="x",
+        params={},
         outcome=("a" * 500) + "\nsecond line",
     )
     line = record.outcome_one_line(max_chars=80)

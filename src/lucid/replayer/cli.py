@@ -108,8 +108,7 @@ def run_replay(
     exit_code = 0
     try:
         _emit(
-            f"[start] replaying {workflow.slug or workflow.name} "
-            f"({len(workflow.steps)} steps)\n",
+            f"[start] replaying {workflow.slug or workflow.name} ({len(workflow.steps)} steps)\n",
             json_output,
             stream="meta",
         )

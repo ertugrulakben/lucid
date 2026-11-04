@@ -86,24 +86,15 @@ class ThoughtChainPanel(QWidget):
     def _rerender(self) -> None:
         """Repaint the deque into the viewer and scroll to the bottom."""
         body = "<br>".join(self._entries)
-        self.viewer.setHtml(
-            "<div style='line-height:1.45'>" + body + "</div>"
-        )
+        self.viewer.setHtml("<div style='line-height:1.45'>" + body + "</div>")
         bar = self.viewer.verticalScrollBar()
         bar.setValue(bar.maximum())
 
     @staticmethod
     def _render_entry(stamp: str, text: str) -> str:
         """Minimal markdown-ish render: highlight plan markers + escape HTML."""
-        safe = (
-            text.replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-        )
+        safe = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
         prefix = "<span style='color:#778;'>" + stamp + "</span>  "
         if safe.lstrip().startswith("🛠"):
-            return (
-                prefix
-                + "<span style='color:#56C2FF;'>" + safe + "</span>"
-            )
+            return prefix + "<span style='color:#56C2FF;'>" + safe + "</span>"
         return prefix + "<span style='color:#dde;'>" + safe + "</span>"

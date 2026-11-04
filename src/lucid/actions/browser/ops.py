@@ -32,7 +32,9 @@ class BrowserLaunchParams(BaseModel):
 
 class BrowserGotoParams(BaseModel):
     url: str = Field(..., min_length=1)
-    wait_until: str = Field("load", description="One of 'load' | 'domcontentloaded' | 'networkidle'.")
+    wait_until: str = Field(
+        "load", description="One of 'load' | 'domcontentloaded' | 'networkidle'."
+    )
 
 
 class BrowserClickParams(BaseModel):
@@ -51,7 +53,9 @@ class BrowserPressParams(BaseModel):
 
 class BrowserWaitParams(BaseModel):
     selector: str = Field(..., min_length=1)
-    state: str = Field("visible", description="One of 'attached' | 'detached' | 'visible' | 'hidden'.")
+    state: str = Field(
+        "visible", description="One of 'attached' | 'detached' | 'visible' | 'hidden'."
+    )
     timeout_ms: int = Field(8000, ge=100, le=120_000)
 
 
@@ -75,9 +79,7 @@ def _runtime(ctx: ActionContext) -> BrowserRuntime:
         raise ActionError("browser action: ActionContext.settings is required")
     cfg = getattr(settings, "browser", None)
     if cfg is None or not getattr(cfg, "enabled", False):
-        raise ActionError(
-            "browser actions are disabled -- flip settings.browser.enabled to True"
-        )
+        raise ActionError("browser actions are disabled -- flip settings.browser.enabled to True")
     return BrowserRuntime.get(settings)
 
 

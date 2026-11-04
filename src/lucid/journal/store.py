@@ -212,7 +212,9 @@ def _jsonable_params(params: dict[str, Any]) -> dict[str, Any]:
         elif isinstance(value, list):
             out[key] = [v if isinstance(v, (str, int, float, bool)) else str(v) for v in value]
         elif isinstance(value, dict):
-            out[key] = {str(k): v for k, v in value.items() if isinstance(v, (str, int, float, bool))}
+            out[key] = {
+                str(k): v for k, v in value.items() if isinstance(v, (str, int, float, bool))
+            }
         else:
             out[key] = str(value)
     return out

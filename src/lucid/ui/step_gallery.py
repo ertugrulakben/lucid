@@ -87,9 +87,9 @@ class StepGalleryPanel(QWidget):
             "QScrollArea#LucidStepGalleryScroll { border: 1px solid #333; "
             "border-radius: 6px; background: rgba(0,0,0,0.4); }"
             "QWidget#LucidStepGridHost { background: transparent; }"
-            "QPushButton[LucidStepCell=\"true\"] { background: rgba(28,28,36,0.85); "
+            'QPushButton[LucidStepCell="true"] { background: rgba(28,28,36,0.85); '
             "border: 1px solid #2c2c38; border-radius: 6px; padding: 4px; color: #dde; }"
-            "QPushButton[LucidStepCell=\"true\"]:hover { border: 1px solid #56C2FF; }"
+            'QPushButton[LucidStepCell="true"]:hover { border: 1px solid #56C2FF; }'
         )
 
     # ------------------------- public API -------------------------
@@ -113,7 +113,10 @@ class StepGalleryPanel(QWidget):
             self._session_dir = session_dir
         self._records.append(record)
         self.title_label.setText(
-            t("step-gallery-active", name=(self._session_dir.name if self._session_dir else "session"))
+            t(
+                "step-gallery-active",
+                name=(self._session_dir.name if self._session_dir else "session"),
+            )
         )
         self._add_cell(record)
 
@@ -232,8 +235,12 @@ class StepDetailDialog(QDialog):
 
         images_row = QHBoxLayout()
         images_row.setSpacing(12)
-        images_row.addWidget(self._image_panel(t("step-detail-before"), record.before_thumb, session_dir))
-        images_row.addWidget(self._image_panel(t("step-detail-after"), record.after_thumb, session_dir))
+        images_row.addWidget(
+            self._image_panel(t("step-detail-before"), record.before_thumb, session_dir)
+        )
+        images_row.addWidget(
+            self._image_panel(t("step-detail-after"), record.after_thumb, session_dir)
+        )
         outer.addLayout(images_row, 3)
 
         meta = QTextBrowser(self)
@@ -272,7 +279,9 @@ class StepDetailDialog(QDialog):
 
         image_label = QLabel(wrapper)
         image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        image_label.setStyleSheet("background: #0a0a10; border: 1px solid #222; border-radius: 6px;")
+        image_label.setStyleSheet(
+            "background: #0a0a10; border: 1px solid #222; border-radius: 6px;"
+        )
         image_label.setMinimumHeight(360)
         pix = _load_thumb(name, session_dir)
         if pix is not None:

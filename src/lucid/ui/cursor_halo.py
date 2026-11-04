@@ -126,7 +126,9 @@ class CursorHalo(QWidget):
         pen_outer.setWidth(2)
         painter.setPen(pen_outer)
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawEllipse(int(cx - self._radius), int(cy - self._radius), self._radius * 2, self._radius * 2)
+        painter.drawEllipse(
+            int(cx - self._radius), int(cy - self._radius), self._radius * 2, self._radius * 2
+        )
 
         inner = QColor(self._colour)
         inner.setAlpha(220)

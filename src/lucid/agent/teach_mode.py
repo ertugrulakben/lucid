@@ -182,7 +182,7 @@ class TeachMode:
         example_cmd = "lucid run " + workflow.slug
         if workflow.variables:
             first = workflow.variables[0]
-            example_cmd += f" --var {first.name}=\"{first.example or '…'}\""
+            example_cmd += f' --var {first.name}="{first.example or "…"}"'
         yield f"Run it with:  {example_cmd}\n"
 
     def _summarise(
