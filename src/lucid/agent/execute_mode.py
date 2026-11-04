@@ -15,7 +15,7 @@ Surrounding infrastructure (added in v0.3):
 - **Profile injection**: the user's ``profile.yaml`` is summarised and added
   so the LLM knows the operator without anything being hard-coded.
 - **Follow-up freshness**: every follow-up re-captures the desktop *now*
-  instead of re-using the stale snapshot the caller passed in (old bug).
+  instead of reusing the stale snapshot the caller passed in (old bug).
 - **Per-action timeout**: ``executor.step_timeout_seconds`` now actually
   applies, wrapped around each tool invocation.
 - **Captcha detector + solver**: every post-action snapshot is scanned; an

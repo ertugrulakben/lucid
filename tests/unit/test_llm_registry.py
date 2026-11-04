@@ -27,7 +27,7 @@ def _fake_settings(mode: str = "anthropic", model: str = "fake-model") -> Simple
         cli_path=None,
         lm_studio_url="http://localhost:1234/v1",
         lm_studio_model="",
-        lm_studio_api_key="lm-studio",
+        lm_studio_api_key="lm-studio",  # pragma: allowlist secret
         kimi_base_url="",
         kimi_model="",
         kimi_vision_model="",

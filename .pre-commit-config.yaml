@@ -1,21 +1,36 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.7
+    rev: v0.17.3  # keep in sync with the ruff pin in pyproject.toml
     hooks:
-      - id: ruff
-        args: [--fix, src/]
+      - id: ruff-check
+        args: [--fix]
       - id: ruff-format
-        args: [src/]
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.6
+    rev: v2.4.3
     hooks:
       - id: codespell
-        args: [--write-changes]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: check-yaml
       - id: end-of-file-fixer
       - id: trailing-whitespace
+      - id: detect-private-key
+
+  # Blocks committed tokens and keys. No baseline: a false positive is marked
+  # inline with `# pragma: allowlist secret` so the reason stays next to it.
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+
+  - repo: local
+    hooks:
+      - id: forbidden-paths
+        name: block local data and secret files
+        entry: local data or secret file staged; keep it out of git
+        language: fail
+        files: '(^|/)(data|private)/|(^|/)profile\.ya?ml$|(^|/)\.env|\.(pem|key|p12|pfx)$|\.db(-wal|-shm)?$|\.sqlite3?$|(^|/)mcp_servers\.ya?ml$'
+        exclude: '(\.example\.ya?ml|\.env\.example)$'

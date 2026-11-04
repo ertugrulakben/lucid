@@ -17,7 +17,7 @@ log = logging.getLogger("lucid.config.secrets")
 SERVICE = "lucid"
 ANTHROPIC_KEY = "anthropic_api_key"
 ENV_FALLBACK = {
-    "anthropic_api_key": "LUCID_ANTHROPIC_API_KEY",
+    "anthropic_api_key": "LUCID_ANTHROPIC_API_KEY",  # pragma: allowlist secret
 }
 
 
