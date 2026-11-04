@@ -71,6 +71,11 @@ desktop.ini
 logs/
 workflows/
 screenshots/
+
+# CI definitions are source code, not runtime workflows.
+!.github/workflows/
+# Release pipeline stays local until the installer build is verified (ROADMAP Phase 4).
+.github/workflows/release.yml
 .lucid/
 settings.local.yaml
 
@@ -84,8 +89,23 @@ profile.yaml
 # Secrets
 .env
 .env.local
+.env.*
+!.env.example
 *.pem
 *.key
+*.p12
+*.pfx
+id_rsa*
+
+# Local databases (memory.db and its WAL/SHM side files)
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# MCP server config can hold tokens; only the example is tracked
+mcp_servers.yaml
 
 # Private plugins & dev notes (kept locally, not published)
 private/
