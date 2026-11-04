@@ -15,7 +15,7 @@ import os
 
 import pytest
 
-playwright = pytest.importorskip("playwright")
+pytest.importorskip("playwright")
 
 from lucid.actions import registry
 from lucid.actions.browser import AVAILABLE, BrowserRuntime
@@ -49,7 +49,7 @@ def test_actions_registered() -> None:
 
 def test_disabled_settings_raises_actionable_error() -> None:
     """When browser.enabled is False (the default), launching must refuse."""
-    from lucid.actions.browser.ops import browser_launch, BrowserLaunchParams
+    from lucid.actions.browser.ops import BrowserLaunchParams, browser_launch
 
     settings = Settings()  # browser.enabled defaults to False
     ctx = registry.ActionContext(settings=settings)

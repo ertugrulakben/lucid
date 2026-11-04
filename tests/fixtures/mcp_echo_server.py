@@ -6,7 +6,10 @@ real client/bridge path. Production code never imports this module.
 
 from __future__ import annotations
 
-from mcp.server.fastmcp import FastMCP
+try:  # mcp >= 2.0 renamed FastMCP to MCPServer
+    from mcp.server.mcpserver import MCPServer as FastMCP
+except ImportError:  # mcp 1.x
+    from mcp.server.fastmcp import FastMCP
 
 app = FastMCP("lucid-test-echo")
 

@@ -10,6 +10,9 @@ import pytest
 @pytest.fixture(autouse=True)
 def _isolated_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Redirect settings and screenshot dirs into a tmp folder for every test."""
+    # Without this, portable mode resolves <repo>/data and tests read or write
+    # the developer's real settings.yaml.
+    monkeypatch.setenv("LUCID_DATA_DIR", str(tmp_path / "data"))
     monkeypatch.setenv("APPDATA", str(tmp_path))
     monkeypatch.setenv("TEMP", str(tmp_path / "tmp"))
     monkeypatch.setenv("LUCID_ANTHROPIC_API_KEY", "test-key")

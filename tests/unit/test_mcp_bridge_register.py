@@ -20,8 +20,7 @@ pytest.importorskip("mcp")
 from lucid.actions import registry
 from lucid.config.settings import Settings
 from lucid.mcp.bridge import MCPActionParams, MCPBridge
-from lucid.mcp.config import MCPServerConfig, load_servers
-
+from lucid.mcp.config import load_servers
 
 FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "mcp_echo_server.py"
 
