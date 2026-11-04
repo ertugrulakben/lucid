@@ -16,6 +16,12 @@ All notable changes to Lucid are documented here. Format follows [Keep a Changel
   debugging.
 - The final proof screenshot honours `screenshot.persist`: with persistence
   off, nothing is captured or saved.
+- Text Lucid pastes stays out of the Windows clipboard history (Win+V) and
+  the cloud clipboard. Each paste carries the opt-out formats Windows
+  documents under "Cloud Clipboard and Clipboard History Formats"
+  (`ExcludeClipboardContentFromMonitorProcessing`,
+  `CanIncludeInClipboardHistory`, `CanUploadToCloudClipboard`); if the
+  clipboard is busy Lucid falls back to a plain copy as before.
 - `screenshot.retention_hours` (screenshots and proofs) and
   `scheduler.log_retention_days` are now enforced, at start-up and before
   every Execute run. The new `journal.retention_hours` (0, off, by default)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from lucid.actions.registry import ActionContext, ActionError, register_action
 from lucid.actions.schemas import TypeTextParams
+from lucid.clipboard import copy_private
 
 
 @register_action(
@@ -30,7 +31,8 @@ def _paste(text: str) -> str:
         saved = None
 
     try:
-        pyperclip.copy(text)
+        if not copy_private(text):  # kept out of the Windows clipboard history
+            pyperclip.copy(text)
         pyautogui.hotkey("ctrl", "v")
         return f"pasted {len(text)} chars"
     except Exception as exc:  # noqa: BLE001

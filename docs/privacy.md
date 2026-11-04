@@ -48,6 +48,14 @@ read-only, or the folder named by `LUCID_DATA_DIR`. `lucid status` prints it.
 Retention is enforced when Lucid starts and before every Execute run. A value
 of 0 keeps that folder as it is.
 
+## Clipboard
+
+Lucid types by pasting: it puts the text on the clipboard, sends Ctrl+V and
+then puts your previous clipboard content back. On Windows the pasted text
+is marked with the formats Windows documents for this purpose, so it stays
+out of the clipboard history (Win+V) and is not synced to your other devices
+by the cloud clipboard.
+
 ## Telemetry
 
 Off by default. When enabled, Lucid sends event names and the install UUID

@@ -7,6 +7,7 @@ import sys
 import time
 from typing import Any
 
+from lucid.clipboard import copy_private
 from lucid.config.settings import Settings
 from lucid.llm.schemas import ActionBlock
 from lucid.privacy import redact_params
@@ -147,7 +148,8 @@ class Actions:
         issue Ctrl+V, which the OS inserts verbatim regardless of language.
 
         Falls back to a slow per-character type only if the clipboard path
-        fails (e.g. inside password fields that block paste).
+        fails (e.g. inside password fields that block paste). The text is
+        kept out of the Windows clipboard history (``lucid.clipboard``).
         """
         text = params.get("text", "")
         if not text:
@@ -164,7 +166,8 @@ class Actions:
             except Exception:
                 saved = None
             try:
-                pyperclip.copy(text)
+                if not copy_private(text):
+                    pyperclip.copy(text)
                 time.sleep(0.05)
                 pyautogui.hotkey("ctrl", "v")
                 time.sleep(0.05)
