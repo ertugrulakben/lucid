@@ -32,13 +32,11 @@ cd lucid
 uv sync --all-extras
 ```
 
-Optional extras (install on demand, not pulled by `--all-extras`):
+`--all-extras` pulls every optional group, the PyTorch-based `omniparser` and `ocr` included. For a lighter install, name the ones you need:
 
 ```powershell
-uv pip install -e ".[browser]"        # Playwright-backed `browser_*` actions
-python -m playwright install chromium  # one-time Chromium download
-
-uv pip install -e ".[mcp]"            # MCP bridge for external tool servers
+uv sync --extra browser --extra mcp           # Playwright `browser_*` actions + MCP bridge
+uv run python -m playwright install chromium  # one-time Chromium download for `browser_*`
 ```
 
 ### 2. Configure
@@ -83,7 +81,7 @@ Need to know "where is this file" or "is this process running"? `run_shell` exec
 Teach once, parameterise forever.
 
 ```powershell
-lucid teach   # record an invoice flow once
+# Ctrl+Alt+J, then Ctrl+2 (Teach): record an invoice flow once
 # ...do the task manually...
 # Workflow saved as "create_invoice" with {{customer}}, {{amount}}, {{date}}
 
@@ -194,10 +192,10 @@ lucid exec --resilient "..."        # long-task mode: 600 s + 200 steps budget
 lucid exec --image ref.png "..."    # with a reference image
 lucid exec --template send_gmail --var to=x@y.com --var subject="Hi"
 
-lucid teach                         # start a Teach recording
+# Teach recordings start in the overlay: Ctrl+Alt+J, then Ctrl+2
 lucid run <slug> [--var k=v]        # replay a named workflow
-lucid list                          # list saved workflows
-lucid forget <slug>                 # delete a workflow
+lucid workflows                     # list saved workflows
+lucid forget <slug> [--delete-file] # unregister a workflow; --delete-file also removes its JSON
 
 lucid schedule add --cron "..." --prompt "..."
 lucid schedule add --every 30m --prompt "..."

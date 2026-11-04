@@ -22,7 +22,7 @@ labels: bug
 - Python version:
 
 ### Logs
-<!-- Paste relevant lines from %APPDATA%\Lucid\logs\lucid.log. -->
+<!-- Paste relevant lines from data\logs\lucid.log (source checkout) or %APPDATA%\Lucid\logs\lucid.log (read-only install). -->
 
 ```
 ```

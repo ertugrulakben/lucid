@@ -50,7 +50,7 @@ Open an issue on GitHub with:
 - Python version
 - Steps to reproduce
 - Expected vs actual behavior
-- Log file from `%APPDATA%\Lucid\logs\lucid.log`
+- Log file: `data\logs\lucid.log` in a source checkout; read-only installs write to `%APPDATA%\Lucid\logs\lucid.log` (`lucid status` prints the data folder)
 
 ## Security
 
