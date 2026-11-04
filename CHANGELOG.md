@@ -2,7 +2,7 @@
 
 All notable changes to Lucid are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.6.1] - 2026-11-04
 
 Closes the technical items of ROADMAP Phase 0. The only runtime change is the
 `lucid doctor` fix below.
