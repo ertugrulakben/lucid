@@ -59,7 +59,8 @@ def test_record_increments_step_id(tmp_path: Path) -> None:
 
 
 def test_read_session_round_trip(tmp_path: Path) -> None:
-    journal = StepJournal.open_session(tmp_path, goal="round trip")
+    # record_text keeps typed text verbatim; by default it is masked (test_privacy.py)
+    journal = StepJournal.open_session(tmp_path, goal="round trip", record_text=True)
     journal.record(
         action_name="type",
         params={"text": "hello"},

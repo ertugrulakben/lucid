@@ -9,6 +9,7 @@ from typing import Any
 
 from lucid.config.settings import Settings
 from lucid.llm.schemas import ActionBlock
+from lucid.privacy import redact_params
 
 log = logging.getLogger("lucid.executor.actions")
 
@@ -42,7 +43,7 @@ class Actions:
     def run(self, action: ActionBlock) -> str:
         name = action.action
         params = action.params
-        log.info("executing action=%s params=%s", name, _summarize_params(params))
+        log.info("executing action=%s params=%s", name, _summarize_params(name, params))
         try:
             if name in ("mouse_move", "cursor_position"):
                 return self._move(params)
@@ -687,8 +688,9 @@ def _move_to_monitor_centre(mon: dict, idx: int) -> str:
     return f"cursor moved to monitor #{idx} centre ({cx}, {cy})"
 
 
-def _summarize_params(params: dict[str, Any]) -> dict[str, Any]:
-    out = dict(params)
+def _summarize_params(name: str, params: dict[str, Any]) -> dict[str, Any]:
+    """Params for the log line: typed text masked (it can be a password), long text cut."""
+    out = redact_params(name, params)
     if "text" in out and isinstance(out["text"], str) and len(out["text"]) > 40:
         out["text"] = out["text"][:40] + "…"
     return out

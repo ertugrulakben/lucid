@@ -52,6 +52,7 @@ from lucid.llm.schemas import ActionBlock
 from lucid.memory.recorder import FactRecorder
 from lucid.memory.retrieval import context_block as memory_context_block
 from lucid.memory.store import MemoryStore
+from lucid.privacy import redact_params
 from lucid.recorder.registry import WorkflowEntry, WorkflowRegistry
 from lucid.recorder.workflow import load_workflow
 from lucid.replayer.semantic_replay import SemanticReplayer
@@ -827,6 +828,7 @@ class ExecuteMode:
                 thumb_width=cfg.thumb_width,
                 webp_quality=cfg.webp_quality,
                 max_sessions=cfg.max_sessions,
+                record_text=getattr(cfg, "record_text", False),
             )
         except Exception as exc:
             log.warning("could not open step journal: %s", exc)
@@ -942,8 +944,12 @@ def _emit_thought(text: str) -> str:
 
 
 def _fmt_plan(action: ActionBlock) -> str:
-    """One-line summary of an action the model is about to run (for ThoughtChain)."""
-    params = action.params or {}
+    """One-line summary of an action the model is about to run (for ThoughtChain).
+
+    Typed text is masked: the panel is on screen, so later screenshots would
+    capture it, and headless runs print it into the scheduled-run log.
+    """
+    params = redact_params(action.action, action.params or {})
     bits: list[str] = []
     for key in ("element_name", "window_title", "file_path", "url", "command"):
         value = params.get(key)
@@ -977,7 +983,8 @@ def _halo_coord_for(action: ActionBlock) -> tuple[int, int] | None:
 
 
 def _fmt_action_for_log(name: str, params: dict, result: str) -> str:
-    """Compact one-liner for the overlay's action-log panel."""
+    """Compact one-liner for the overlay's action-log panel (typed text masked)."""
+    params = redact_params(name, params)
     bits = [name]
     if params.get("element_name"):
         bits.append(f"'{params['element_name']}'")

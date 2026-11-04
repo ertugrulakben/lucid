@@ -136,8 +136,9 @@ def browser_fill(ctx: ActionContext, params: BrowserFillParams) -> str:
     runtime = _runtime(ctx)
     page = runtime.page()
     page.locator(params.selector).first.fill(params.text)
-    snippet = params.text[:30] + ("…" if len(params.text) > 30 else "")
-    return f"filled {params.selector!r} with {snippet!r}"
+    # The outcome reaches the journal, the transcript and the overlay; the text
+    # can be a password, so report only its length.
+    return f"filled {params.selector!r} ({len(params.text)} chars)"
 
 
 @register_action(

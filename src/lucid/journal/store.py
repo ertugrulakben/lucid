@@ -13,6 +13,9 @@ One session = one Execute run. Layout::
 ``index.jsonl`` is append-only, one JSON object per line. The store keeps
 ``settings.journal.max_sessions`` directories on disk, deleting the oldest
 sessions atomically when the cap is exceeded.
+
+Typed text (``type``, ``type_text``, ``browser_fill``) is stored masked, length
+only, unless ``settings.journal.record_text`` is on: it can be a password.
 """
 
 from __future__ import annotations
@@ -27,6 +30,8 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from PIL import Image
+
+from lucid.privacy import redact_params
 
 from .models import StepRecord
 
@@ -48,10 +53,12 @@ class StepJournal:
         session_dir: Path,
         thumb_width: int = 480,
         webp_quality: int = 70,
+        record_text: bool = False,
     ) -> None:
         self.session_dir = session_dir
         self.thumb_width = max(120, int(thumb_width))
         self.webp_quality = max(10, min(100, int(webp_quality)))
+        self.record_text = bool(record_text)
         self._lock = threading.Lock()
         self._step_id = 0
         self._index_path = session_dir / "index.jsonl"
@@ -66,6 +73,7 @@ class StepJournal:
         thumb_width: int = 480,
         webp_quality: int = 70,
         max_sessions: int = 30,
+        record_text: bool = False,
     ) -> "StepJournal":
         """Create a fresh session folder under ``journals_dir`` and prune old ones."""
         journals_dir.mkdir(parents=True, exist_ok=True)
@@ -78,7 +86,12 @@ class StepJournal:
         while session_dir.exists():
             suffix += 1
             session_dir = journals_dir / f"{stamp}-{slug}-{suffix}"
-        journal = cls(session_dir, thumb_width=thumb_width, webp_quality=webp_quality)
+        journal = cls(
+            session_dir,
+            thumb_width=thumb_width,
+            webp_quality=webp_quality,
+            record_text=record_text,
+        )
         try:
             prune_old_sessions(journals_dir, keep=max_sessions)
         except Exception as exc:
@@ -113,11 +126,14 @@ class StepJournal:
                 if after_image is not None
                 else None
             )
+            stored = params or {}
+            if not self.record_text:
+                stored = redact_params(action_name, stored)
             record = StepRecord(
                 id=step_id,
                 ts=time.time(),
                 action_name=action_name,
-                params=_jsonable_params(params or {}),
+                params=_jsonable_params(stored),
                 outcome=outcome or "",
                 before_thumb=before_name,
                 after_thumb=after_name,

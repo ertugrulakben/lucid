@@ -207,12 +207,17 @@ class JournalSettings(BaseModel):
     The journal is what powers the Step Gallery panel in the overlay. It also
     survives the run, so the user can revisit a finished task and see exactly
     what Lucid touched at each step.
+
+    ``record_text`` stores the text Lucid typed verbatim in ``index.jsonl``.
+    Off by default because Lucid types passwords too; the journal then keeps
+    only the length of the text.
     """
 
     enabled: bool = True
     max_sessions: int = Field(default=30, ge=1, le=500)
     thumb_width: int = Field(default=480, ge=120, le=1920)
     webp_quality: int = Field(default=70, ge=10, le=100)
+    record_text: bool = False
 
 
 class Settings(BaseModel):
