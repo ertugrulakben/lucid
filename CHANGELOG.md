@@ -14,6 +14,9 @@ All notable changes to Lucid are documented here. Format follows [Keep a Changel
   `type`, `type_text` and `browser_fill` is now replaced by its length;
   `journal.record_text` (off by default) keeps it in the journal for
   debugging.
+- MCP tool arguments whose name looks like a secret (`password`, `token`,
+  `apiKey`, `auth` ...) are masked the same way in the journal, nested
+  objects included; `journal.record_text` keeps them verbatim as well.
 - The final proof screenshot has its own switch, `screenshot.save_proof` (on
   by default), and its own retention, `screenshot.proof_retention_hours` (24).
   With the switch off nothing is captured or saved; before, the proof was

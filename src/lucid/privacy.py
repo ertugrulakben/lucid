@@ -5,7 +5,11 @@ Lucid types on the user's behalf, password fields included. The step journal
 panels, and the logs of scheduled runs describe every action, so they must not
 repeat what was typed: they keep its length instead.
 
-``journal.record_text: true`` stores typed text verbatim in the journal for
+MCP tool arguments are free-form, so the ones whose name looks like a secret
+(``password``, ``apiKey``, ``access_token``, ``auth`` ...) are masked the same
+way, nested objects included.
+
+``journal.record_text: true`` stores both verbatim in the journal for
 debugging. The log file and the overlay always show the masked form.
 
 The retention settings are enforced here as well (:func:`apply_retention`), at
@@ -15,6 +19,7 @@ app start and before every Execute run.
 from __future__ import annotations
 
 import logging
+import re
 import shutil
 import time
 from collections.abc import Mapping
@@ -31,17 +36,61 @@ log = logging.getLogger("lucid.privacy")
 #: that is not user content and stays readable.
 TEXT_ACTIONS = frozenset({"type", "type_text", "browser_fill"})
 
+#: MCP tools are registered as ``mcp_<server>_<tool>`` actions (lucid.mcp.bridge).
+MCP_PREFIX = "mcp_"
+
+#: Words that mark a parameter name as a secret. Whole words only, so ``keys``,
+#: ``keyboard`` and ``passport`` stay readable.
+SECRET_WORDS = frozenset(
+    {
+        "apikey",
+        "auth",
+        "authorization",
+        "bearer",
+        "cookie",
+        "credential",
+        "credentials",
+        "key",
+        "otp",
+        "pass",
+        "passwd",
+        "password",
+        "pin",
+        "pwd",
+        "secret",
+        "token",
+    }
+)
+
 
 def mask_text(text: str) -> str:
     """Placeholder that keeps the length of ``text`` but not its content."""
     return f"[redacted: {len(text)} chars]"
 
 
+def is_secret_name(name: str) -> bool:
+    """True when a parameter name (``api_key``, ``apiKey``, ``X-Api-Key``) names a secret."""
+    snake = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name).lower()
+    return any(word in SECRET_WORDS for word in re.split(r"[^a-z0-9]+", snake) if word)
+
+
+def _mask_secrets(name: str, value: Any) -> Any:
+    if is_secret_name(name):
+        return mask_text(value) if isinstance(value, str) else "[redacted]"
+    if isinstance(value, Mapping):
+        return {k: _mask_secrets(str(k), v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_mask_secrets("", v) if isinstance(v, Mapping) else v for v in value]
+    return value
+
+
 def redact_params(action_name: str, params: Mapping[str, Any]) -> dict[str, Any]:
-    """Copy of ``params`` with the typed text masked for text-entry actions."""
+    """Copy of ``params`` with typed text and secret-named MCP arguments masked."""
     out = dict(params)
     if action_name in TEXT_ACTIONS and isinstance(out.get("text"), str):
         out["text"] = mask_text(out["text"])
+    if action_name.startswith(MCP_PREFIX):
+        out = {key: _mask_secrets(key, value) for key, value in out.items()}
     return out
 
 

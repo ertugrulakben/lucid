@@ -15,7 +15,7 @@ from lucid.config.settings import Settings
 from lucid.executor.actions import _summarize_params
 from lucid.journal import StepJournal
 from lucid.llm.schemas import ActionBlock
-from lucid.privacy import mask_text, redact_params
+from lucid.privacy import is_secret_name, mask_text, redact_params
 
 TYPED = "hunter2-Parola!"
 
@@ -92,6 +92,57 @@ def test_browser_fill_outcome_reports_length_only(monkeypatch: pytest.MonkeyPatc
     assert filled == [TYPED]
     assert TYPED not in out
     assert f"({len(TYPED)} chars)" in out
+
+
+@pytest.mark.parametrize(
+    "name",
+    ["password", "apiKey", "api_key", "X-Api-Key", "access_token", "clientSecret", "Authorization"],
+)
+def test_secret_names(name: str) -> None:
+    assert is_secret_name(name)
+
+
+@pytest.mark.parametrize("name", ["keys", "keyboard", "passport", "query", "to", "body"])
+def test_ordinary_names(name: str) -> None:
+    assert not is_secret_name(name)
+
+
+def test_mcp_secret_arguments_are_masked_nested() -> None:
+    params = {
+        "to": "ea@example.com",
+        "password": TYPED,
+        "auth": {"user": "ea"},
+        "config": {"apiKey": TYPED, "region": "eu"},
+        "items": [{"token": TYPED}],
+        "count": 3,
+    }
+    out = redact_params("mcp_mail_send", params)
+    assert out["to"] == "ea@example.com"
+    assert out["count"] == 3
+    assert out["password"] == mask_text(TYPED)
+    assert out["auth"] == "[redacted]"
+    assert out["config"] == {"apiKey": mask_text(TYPED), "region": "eu"}
+    assert out["items"] == [{"token": mask_text(TYPED)}]
+    assert params["password"] == TYPED
+
+
+def test_builtin_key_parameter_stays_readable() -> None:
+    assert redact_params("browser_press", {"key": "Enter"}) == {"key": "Enter"}
+
+
+def test_journal_masks_mcp_secrets_unless_record_text(tmp_path: Path) -> None:
+    for record_text in (False, True):
+        journal = StepJournal.open_session(tmp_path, goal="mail", record_text=record_text)
+        journal.record(
+            action_name="mcp_mail_login",
+            params={"user": "ea", "password": TYPED},
+            before_image=None,
+            after_image=None,
+            outcome="ok",
+        )
+        stored = json.loads((journal.session_dir / "index.jsonl").read_text(encoding="utf-8"))
+        assert stored["params"]["user"] == "ea"
+        assert (stored["params"]["password"] == TYPED) is record_text
 
 
 def test_screenshot_defaults_keep_steps_off_disk_and_proofs_on() -> None:

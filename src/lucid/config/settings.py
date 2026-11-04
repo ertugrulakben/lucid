@@ -216,9 +216,10 @@ class JournalSettings(BaseModel):
     survives the run, so the user can revisit a finished task and see exactly
     what Lucid touched at each step.
 
-    ``record_text`` stores the text Lucid typed verbatim in ``index.jsonl``.
-    Off by default because Lucid types passwords too; the journal then keeps
-    only the length of the text.
+    ``record_text`` stores the text Lucid typed, and MCP tool arguments whose
+    name looks like a secret (``password``, ``api_key`` ...), verbatim in
+    ``index.jsonl``. Off by default because Lucid types passwords too; the
+    journal then keeps only the length of the text.
 
     ``retention_hours`` deletes sessions older than that many hours; 0 keeps
     them until ``max_sessions`` pushes them out.
