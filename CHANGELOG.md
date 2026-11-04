@@ -13,9 +13,11 @@ Closes the technical items of ROADMAP Phase 0. The only runtime change is the
   3.12) runs ruff, ruff format, mypy and pytest; a Linux job runs pre-commit
   and mypy. The uv download cache comes from `astral-sh/setup-uv`.
 - A local pre-commit hook (also run in CI) refuses to commit local data and
-  secret files: `data/`, `private/`, `profile.yaml`, `.env*`, keys and
-  databases. `detect-private-key` and `detect-secrets` run as well; the two
-  known false positives are marked inline with `# pragma: allowlist secret`.
+  secret files in any letter case: `data/`, `private/`, `profile.yaml`,
+  `mcp_servers.yaml`, `.env*` (except `.env.example` outside `data/` and
+  `private/`), keys and databases. `detect-private-key` and `detect-secrets`
+  run as well; the two known false positives are marked inline with
+  `# pragma: allowlist secret`.
 
 ### Changed
 

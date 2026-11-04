@@ -32,5 +32,7 @@ repos:
         name: block local data and secret files
         entry: local data or secret file staged; keep it out of git
         language: fail
-        files: '(^|/)(data|private)/|(^|/)profile\.ya?ml$|(^|/)\.env|\.(pem|key|p12|pfx)$|\.db(-wal|-shm)?$|\.sqlite3?$|(^|/)mcp_servers\.ya?ml$'
-        exclude: '(\.example\.ya?ml|\.env\.example)$'
+        # (?i): Windows file names ignore case, and so does .gitignore there.
+        files: '(?i)(^|/)(data|private)/|(^|/)profile\.ya?ml$|(^|/)\.env|\.(pem|key|p12|pfx)$|\.db(-wal|-shm)?$|\.sqlite3?$|(^|/)mcp_servers\.ya?ml$'
+        # Only .env.example templates outside data/ and private/ may pass.
+        exclude: '(?i)^(?!(.*/)?(data|private)/)(.*/)?\.env\.example$'
