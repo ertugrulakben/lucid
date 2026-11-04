@@ -1,0 +1,74 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    name: windows / py${{ matrix.python-version }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv (with dependency cache)
+        uses: astral-sh/setup-uv@v10
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Sync dependencies
+        run: uv sync --extra dev --extra mcp --extra browser
+
+      - name: Ruff lint
+        run: uv run ruff check .
+
+      - name: Ruff format check
+        run: uv run ruff format --check .
+
+      - name: Mypy
+        run: uv run mypy src
+
+      - name: Pytest
+        run: uv run pytest -q
+        env:
+          QT_QPA_PLATFORM: "offscreen"
+
+  linux-static:
+    # Static gates only. The Linux test matrix is ROADMAP Phase 3
+    # (pygetwindow raises NotImplementedError on import under Linux).
+    name: linux / static checks
+    runs-on: ubuntu-latest
+    env:
+      # pynput pulls evdev on Linux, which builds from source and needs Python.h;
+      # uv-managed CPython ships the headers.
+      UV_PYTHON_PREFERENCE: only-managed
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv (with dependency cache)
+        uses: astral-sh/setup-uv@v10
+        with:
+          python-version: "3.12"
+
+      - name: Sync dependencies
+        run: uv sync --extra dev --extra mcp --extra browser
+
+      - name: Pre-commit (ruff, format, codespell, yaml, whitespace, secrets, forbidden paths)
+        run: uv run pre-commit run --all-files --show-diff-on-failure
+
+      - name: Mypy
+        run: uv run mypy src
