@@ -52,7 +52,7 @@ from lucid.llm.schemas import ActionBlock
 from lucid.memory.recorder import FactRecorder
 from lucid.memory.retrieval import context_block as memory_context_block
 from lucid.memory.store import MemoryStore
-from lucid.privacy import redact_params
+from lucid.privacy import apply_retention, redact_params
 from lucid.recorder.registry import WorkflowEntry, WorkflowRegistry
 from lucid.recorder.workflow import load_workflow
 from lucid.replayer.semantic_replay import SemanticReplayer
@@ -241,6 +241,7 @@ class ExecuteMode:
         self._transcript.clear()
         self._pending_attachments = list(attachments or [])
         budget = RetryBudget(max_attempts=self.settings.executor.retry_max_attempts)
+        self._apply_retention()
         self._open_journal_if_enabled(prompt)
 
         # Before spinning up a fresh Execute loop, check whether the prompt
@@ -818,6 +819,16 @@ class ExecuteMode:
             return sorted(n for n in _registry.available() if n.startswith("mcp_"))
         except Exception:
             return []
+
+    def _apply_retention(self) -> None:
+        """Delete screenshots, proofs, journals and scheduled-run logs past their retention."""
+        try:
+            removed = apply_retention(self.settings)
+        except Exception as exc:  # housekeeping never blocks a run
+            log.debug("retention pass failed: %s", exc)
+            return
+        if any(removed.values()):
+            log.info("retention: removed %s", removed)
 
     def _open_journal_if_enabled(self, goal: str) -> None:
         """Open a fresh Step Journal session unless the user disabled it."""

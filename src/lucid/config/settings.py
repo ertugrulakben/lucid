@@ -19,6 +19,8 @@ from pydantic import BaseModel, ConfigDict, Field
 class ScreenshotSettings(BaseModel):
     max_width: int = 1024
     persist: bool = True
+    # Hours to keep files in screenshots/ and proofs/; 0 keeps them. Enforced at
+    # app start and before every Execute run (lucid.privacy.apply_retention).
     retention_hours: int = 24
     blacklist_titles: list[str] = Field(
         default_factory=lambda: [
@@ -211,6 +213,9 @@ class JournalSettings(BaseModel):
     ``record_text`` stores the text Lucid typed verbatim in ``index.jsonl``.
     Off by default because Lucid types passwords too; the journal then keeps
     only the length of the text.
+
+    ``retention_hours`` deletes sessions older than that many hours; 0 keeps
+    them until ``max_sessions`` pushes them out.
     """
 
     enabled: bool = True
@@ -218,6 +223,7 @@ class JournalSettings(BaseModel):
     thumb_width: int = Field(default=480, ge=120, le=1920)
     webp_quality: int = Field(default=70, ge=10, le=100)
     record_text: bool = False
+    retention_hours: int = Field(default=0, ge=0)
 
 
 class Settings(BaseModel):

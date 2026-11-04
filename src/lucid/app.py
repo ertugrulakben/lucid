@@ -16,6 +16,7 @@ from lucid.capture import ContextSnapshot
 from lucid.config.settings import Settings, get_settings
 from lucid.hotkey.listener import HotkeyListener
 from lucid.i18n import _ as t
+from lucid.privacy import apply_retention
 from lucid.ui.cursor_halo import CursorHalo
 from lucid.ui.overlay import OverlayWindow
 
@@ -513,6 +514,12 @@ def run_app() -> int:
     settings = get_settings()
     _setup_logging(settings)
     log.info("Lucid starting, hotkey=%s", settings.hotkey)
+    try:
+        removed = apply_retention(settings)
+        if any(removed.values()):
+            log.info("retention: removed %s", removed)
+    except Exception as exc:  # housekeeping never blocks start-up
+        log.debug("retention pass failed: %s", exc)
 
     app = QApplication(sys.argv)
     app.setApplicationName("Lucid")
