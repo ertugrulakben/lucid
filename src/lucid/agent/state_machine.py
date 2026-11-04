@@ -13,7 +13,7 @@ from lucid.agent.conversation import Conversation
 from lucid.agent.execute_mode import ExecuteMode
 from lucid.agent.teach_mode import TeachMode
 from lucid.capture import ContextSnapshot
-from lucid.config.profile import get_profile
+from lucid.config.profile import Profile, get_profile
 from lucid.llm.provider import create_provider
 from lucid.memory.store import MemoryStore
 
@@ -57,6 +57,7 @@ class ModeRouter(QObject):
                 log.warning("memory store disabled (init failed): %s", exc)
                 self._store = None
 
+        self._profile: Profile | None
         try:
             self._profile = get_profile(settings)
         except Exception as exc:

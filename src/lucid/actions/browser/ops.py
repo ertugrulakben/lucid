@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional, cast
 
 from pydantic import BaseModel, Field
 
@@ -19,6 +19,10 @@ from lucid.actions.registry import ActionContext, ActionError, register_action
 from .runtime import BrowserRuntime
 
 log = logging.getLogger("lucid.actions.browser.ops")
+
+# Playwright's literal parameter types; schemas keep plain ``str`` fields.
+_WaitUntil = Literal["commit", "domcontentloaded", "load", "networkidle"]
+_LocatorState = Literal["attached", "detached", "hidden", "visible"]
 
 
 # --------------------------------------------------------------------------- #
@@ -104,7 +108,7 @@ def browser_launch(ctx: ActionContext, params: BrowserLaunchParams) -> str:
 def browser_goto(ctx: ActionContext, params: BrowserGotoParams) -> str:
     runtime = _runtime(ctx)
     page = runtime.ensure_page()
-    response = page.goto(params.url, wait_until=params.wait_until)
+    response = page.goto(params.url, wait_until=cast(_WaitUntil, params.wait_until))
     status = response.status if response is not None else "?"
     title = (page.title() or "").strip()
     return f"navigated -> {page.url} (status={status}) title={title!r}"
@@ -156,7 +160,9 @@ def browser_press(ctx: ActionContext, params: BrowserPressParams) -> str:
 def browser_wait_for(ctx: ActionContext, params: BrowserWaitParams) -> str:
     runtime = _runtime(ctx)
     page = runtime.page()
-    page.locator(params.selector).first.wait_for(state=params.state, timeout=params.timeout_ms)
+    page.locator(params.selector).first.wait_for(
+        state=cast(_LocatorState, params.state), timeout=params.timeout_ms
+    )
     return f"selector {params.selector!r} reached state {params.state!r}"
 
 

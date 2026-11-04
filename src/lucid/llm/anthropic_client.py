@@ -124,9 +124,9 @@ class AnthropicProvider(LLMProvider):
                 RateLimitError,
             )
         except ImportError:  # very old anthropic SDKs
-            APIConnectionError = APITimeoutError = RateLimitError = type("_Stub", (Exception,), {})  # type: ignore[assignment]
-            AuthenticationError = BadRequestError = NotFoundError = type("_Stub", (Exception,), {})  # type: ignore[assignment]
-            InternalServerError = PermissionDeniedError = type("_Stub", (Exception,), {})  # type: ignore[assignment]
+            APIConnectionError = APITimeoutError = RateLimitError = type("_Stub", (Exception,), {})  # type: ignore[assignment,misc]
+            AuthenticationError = BadRequestError = NotFoundError = type("_Stub", (Exception,), {})  # type: ignore[assignment,misc]
+            InternalServerError = PermissionDeniedError = type("_Stub", (Exception,), {})  # type: ignore[assignment,misc]
 
         try:
             with client.messages.stream(**kwargs) as stream:
@@ -143,7 +143,7 @@ class AnthropicProvider(LLMProvider):
                                 "input_index": getattr(event, "index", 0),
                             }
                     elif etype == "content_block_delta":
-                        delta = getattr(event, "delta", None)
+                        delta: Any = getattr(event, "delta", None)
                         dtype = getattr(delta, "type", "") if delta is not None else ""
                         if dtype == "text_delta":
                             yield StreamEvent(kind="text_delta", text=delta.text)

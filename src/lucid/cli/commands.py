@@ -442,15 +442,17 @@ def _register_actions(app: typer.Typer) -> None:
         from lucid.actions import available, get
 
         names = available()
-        rows = [
-            {
-                "name": n,
-                "summary": get(n).summary,
-                "source": get(n).source,
-                "schema": get(n).schema.__name__ if get(n).schema else None,
-            }
-            for n in names
-        ]
+        rows = []
+        for n in names:
+            spec = get(n)
+            rows.append(
+                {
+                    "name": n,
+                    "summary": spec.summary,
+                    "source": spec.source,
+                    "schema": spec.schema.__name__ if spec.schema else None,
+                }
+            )
         if json_output:
             typer.echo(json_mod.dumps({"actions": rows}, indent=2))
             return

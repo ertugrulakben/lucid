@@ -24,8 +24,8 @@ try:  # pragma: no cover -- guarded so vanilla installs keep working
     AVAILABLE = True
 except Exception as exc:  # noqa: BLE001 -- missing extra means MCP off
     log.debug("MCP bridge unavailable: %s", exc)
-    MCPBridge = None  # type: ignore[assignment]
-    MCPServerConfig = None  # type: ignore[assignment]
+    MCPBridge = None  # type: ignore[assignment,misc]
+    MCPServerConfig = None  # type: ignore[assignment,misc]
     load_servers = None  # type: ignore[assignment]
     AVAILABLE = False
 

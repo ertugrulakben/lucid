@@ -29,7 +29,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 
 from lucid.capture import ContextSnapshot
 from lucid.config.profile import Profile, pick_profile_snippet
@@ -184,7 +184,7 @@ class ExecuteMode:
         self.actions = Actions(settings, memory_store=memory_store)
         self.safety = SafetyGuard(settings)
         self._cancel = threading.Event()
-        self._kill_switch_unreg = None
+        self._kill_switch_unreg: Callable[[], None] | None = None
         self._captcha = (
             CaptchaSolver(settings, memory_store, provider, self.actions) if memory_store else None
         )
@@ -368,8 +368,8 @@ class ExecuteMode:
                     assistant_blocks.append({"type": "text", "text": event.text})
                     narration_buffer += event.text
                 elif event.kind == "tool_use" and event.tool_use is not None:
-                    block = ActionBlock.from_tool_use(event.tool_use)
-                    tool_uses.append(block)
+                    action_block = ActionBlock.from_tool_use(event.tool_use)
+                    tool_uses.append(action_block)
                     assistant_blocks.append(
                         {
                             "type": "tool_use",
@@ -383,7 +383,7 @@ class ExecuteMode:
                     if narration_buffer.strip():
                         yield _emit_thought(narration_buffer.strip())
                         narration_buffer = ""
-                    yield _emit_thought("🛠 plan: " + _fmt_plan(block))
+                    yield _emit_thought("🛠 plan: " + _fmt_plan(action_block))
                 elif event.kind == "done":
                     last_stop_reason = event.stop_reason
                 elif event.kind == "error":

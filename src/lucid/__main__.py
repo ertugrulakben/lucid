@@ -376,14 +376,14 @@ def _cmd_schedule(args: argparse.Namespace) -> int:
         return 2
 
     if action == "run":
-        task = store.get(args.slug)
-        if task is None:
+        found = store.get(args.slug)
+        if found is None:
             print(f"no scheduled task matching {args.slug!r}")
             return 2
         log_dir = settings.data_dir / "schedule_logs"
-        print(f"firing now: {task.slug}")
-        code = run_once_now(task, log_dir=log_dir if args.log else None)
-        store.mark_fired(task.slug, exit_code=code)
+        print(f"firing now: {found.slug}")
+        code = run_once_now(found, log_dir=log_dir if args.log else None)
+        store.mark_fired(found.slug, exit_code=code)
         print(f"  exit: {code}")
         return code
 
@@ -435,10 +435,8 @@ def main() -> int:
     try:
         from lucid.cli import main as typer_main
     except ImportError:
-        typer_main = None
-    if typer_main is not None:
-        return typer_main()
-    return _legacy_main()
+        return _legacy_main()
+    return typer_main()
 
 
 def _legacy_main() -> int:

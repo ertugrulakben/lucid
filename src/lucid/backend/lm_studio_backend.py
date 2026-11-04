@@ -71,8 +71,8 @@ class LMStudioProvider(LLMProvider):
             response = httpx.get(url, timeout=4.0)
             response.raise_for_status()
             payload = response.json()
-            ids = [
-                item.get("id")
+            ids: list[str] = [
+                str(item["id"])
                 for item in payload.get("data", [])
                 if isinstance(item, dict) and item.get("id")
             ]

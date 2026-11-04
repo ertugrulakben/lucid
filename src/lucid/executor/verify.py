@@ -80,7 +80,9 @@ def snapshot() -> ScreenState:
             state.focused_name = (getattr(node, "Name", "") or "").strip()[:200]
             state.focused_role = (getattr(node, "ControlTypeName", "") or "").strip()[:80]
             try:
-                pattern = node.GetValuePattern()
+                # Only value-capable control types expose GetValuePattern.
+                get_value = getattr(node, "GetValuePattern", None)
+                pattern = get_value() if callable(get_value) else None
                 state.focused_value = (getattr(pattern, "Value", "") or "").strip()[:200]
             except Exception:
                 state.focused_value = ""

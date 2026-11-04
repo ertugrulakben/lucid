@@ -152,10 +152,11 @@ class MCPSupervisor:
         handle = self._servers.get(server_name)
         if handle is None or handle.session is None:
             raise RuntimeError(f"MCP server {server_name!r} is not connected")
+        session = handle.session
 
         async def _call() -> Any:
             return await asyncio.wait_for(
-                handle.session.call_tool(tool_name, arguments or {}),
+                session.call_tool(tool_name, arguments or {}),
                 timeout=timeout,
             )
 

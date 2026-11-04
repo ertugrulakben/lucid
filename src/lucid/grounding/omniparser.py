@@ -32,7 +32,7 @@ class OmniParserDetector:
     def __init__(self, model_id: str, cache_dir: Path) -> None:
         self.model_id = model_id
         self.cache_dir = cache_dir
-        self._pipeline = None
+        self._pipeline: _StubPipeline | None = None
 
     @classmethod
     def from_settings(cls, settings: object | None) -> "OmniParserDetector":

@@ -22,7 +22,7 @@ try:  # pragma: no cover -- import guarded so missing extra never crashes
     AVAILABLE = True
 except Exception as exc:  # noqa: BLE001 -- any import failure means no playwright
     log.debug("browser action group unavailable: %s", exc)
-    BrowserRuntime = None  # type: ignore[assignment]
+    BrowserRuntime = None  # type: ignore[assignment,misc]
     AVAILABLE = False
 
 

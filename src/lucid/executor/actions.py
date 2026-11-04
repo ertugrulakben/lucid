@@ -246,7 +246,7 @@ class Actions:
         except ImportError:
             return "error: win32 unavailable"
 
-        match = {"hwnd": 0, "title": ""}
+        match: dict[str, Any] = {"hwnd": 0, "title": ""}
 
         def _enum(hwnd: int, _extra: Any) -> bool:
             if not win32gui.IsWindowVisible(hwnd):

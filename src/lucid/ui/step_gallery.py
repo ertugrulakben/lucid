@@ -65,22 +65,22 @@ class StepGalleryPanel(QWidget):
         header.addWidget(self.title_label, 1)
         outer.addLayout(header)
 
-        self.scroll = QScrollArea(self)
-        self.scroll.setObjectName("LucidStepGalleryScroll")
-        self.scroll.setWidgetResizable(True)
-        self.scroll.setMinimumHeight(180)
-        self.scroll.setMaximumHeight(360)
-        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self._scroll_area = QScrollArea(self)
+        self._scroll_area.setObjectName("LucidStepGalleryScroll")
+        self._scroll_area.setWidgetResizable(True)
+        self._scroll_area.setMinimumHeight(180)
+        self._scroll_area.setMaximumHeight(360)
+        self._scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
-        self._grid_host = QWidget(self.scroll)
+        self._grid_host = QWidget(self._scroll_area)
         self._grid_host.setObjectName("LucidStepGridHost")
         self._grid = QGridLayout(self._grid_host)
         self._grid.setContentsMargins(4, 4, 4, 4)
         self._grid.setSpacing(8)
         self._grid.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
-        self.scroll.setWidget(self._grid_host)
-        outer.addWidget(self.scroll)
+        self._scroll_area.setWidget(self._grid_host)
+        outer.addWidget(self._scroll_area)
 
         self.setStyleSheet(
             "QLabel#LucidStepGalleryTitle { color: #cdd; font-size: 12px; }"

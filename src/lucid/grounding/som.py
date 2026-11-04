@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any, Optional
 
 from PIL import Image
 
@@ -195,7 +195,7 @@ def _read_str(settings: object | None, path: tuple[str, ...], default: str) -> s
 
 
 def _read_int(settings: object | None, path: tuple[str, ...], default: int) -> int:
-    value = _read_attr(settings, path)
+    value: Any = _read_attr(settings, path)
     try:
         return int(value)
     except (TypeError, ValueError):

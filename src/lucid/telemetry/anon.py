@@ -47,8 +47,11 @@ class Telemetry:
         threading.Thread(target=self._send, args=(payload,), daemon=True).start()
 
     def _send(self, payload: dict) -> None:
+        endpoint = self.settings.telemetry.endpoint
+        if not endpoint:  # event() already checks; narrows the type for mypy
+            return
         try:
-            httpx.post(self.settings.telemetry.endpoint, json=payload, timeout=5.0)
+            httpx.post(endpoint, json=payload, timeout=5.0)
         except Exception as exc:
             log.debug("telemetry send failed: %s", exc)
 
