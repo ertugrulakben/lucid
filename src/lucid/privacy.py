@@ -97,23 +97,24 @@ def redact_params(action_name: str, params: Mapping[str, Any]) -> dict[str, Any]
     return out
 
 
-#: The names Lucid gives what it writes in each folder it prunes. Anything else
-#: in those folders is left alone: ``data_dir`` is user-configurable and can
-#: share a folder with the user's own files (``Pictures\Screenshots`` on
-#: Windows, where names are case-insensitive).
+#: The names Lucid gives what it writes in each folder it prunes, matched in
+#: full and with ASCII digits only. Anything else in those folders is left
+#: alone: ``data_dir`` is user-configurable and can share a folder with the
+#: user's own files (``Pictures\Screenshots`` on Windows, where names are
+#: case-insensitive).
 LUCID_NAMES = {
-    # capture.screenshot.save_image, browser_screenshot
-    "screenshots": re.compile(r"^(?:\d{13}|browser-\d{8}-\d{6})\.png$"),
-    # ExecuteMode._final_proof
-    "proofs": re.compile(r"^\d{8}-\d{6}-.+\.png$"),
-    # StepJournal.open_session (folders)
-    "journals": re.compile(r"^\d{8}-\d{6}-"),
-    # scheduler.daemon run logs
-    "schedule_logs": re.compile(r"^\d{8}-\d{6}-.+\.log$"),
+    # capture.screenshot.save_image (epoch milliseconds), browser_screenshot
+    "screenshots": re.compile(r"(?:[0-9]{13}|browser-[0-9]{8}-[0-9]{6})\.png"),
+    # ExecuteMode._final_proof: <stamp>-<goal slug>.png
+    "proofs": re.compile(r"[0-9]{8}-[0-9]{6}-.+\.png"),
+    # StepJournal.open_session: <stamp>-<slug>[-n] folders; the slug is [a-z0-9_-]
+    "journals": re.compile(r"[0-9]{8}-[0-9]{6}-[a-z0-9_-]+"),
+    # scheduler daemon run logs: <stamp>-<task slug>.log; the slug may be empty
+    "schedule_logs": re.compile(r"[0-9]{8}-[0-9]{6}-.*\.log"),
 }
 
 
-def _is_link(info: os.stat_result) -> bool:
+def is_link(info: os.stat_result) -> bool:
     """A symlink, or on Windows any reparse point (junctions included)."""
     reparse = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
     return stat.S_ISLNK(info.st_mode) or bool(getattr(info, "st_file_attributes", 0) & reparse)
@@ -129,7 +130,7 @@ def prune_older_than(
 ) -> int:
     """Delete what Lucid wrote in ``directory`` more than ``max_age_hours`` ago.
 
-    Only entries whose name matches ``names`` and whose type matches
+    Only entries whose whole name matches ``names`` and whose type matches
     ``folders`` (folders for journals, files elsewhere) are candidates. Links
     are never followed or removed, and a ``directory`` that is itself a link is
     not entered. ``max_age_hours <= 0`` keeps everything. An entry that cannot
@@ -140,18 +141,18 @@ def prune_older_than(
         return 0
     limit = (time.time() if now is None else now) - max_age_hours * 3600
     try:
-        if _is_link(directory.lstat()):
+        if is_link(directory.lstat()):
             return 0
         entries = list(directory.iterdir())
     except OSError:
         return 0
     removed = 0
     for path in entries:
-        if not names.match(path.name):
+        if not names.fullmatch(path.name):
             continue
         try:
             info = path.lstat()
-            if _is_link(info) or stat.S_ISDIR(info.st_mode) != folders:
+            if is_link(info) or stat.S_ISDIR(info.st_mode) != folders:
                 continue
             if info.st_mtime >= limit:
                 continue

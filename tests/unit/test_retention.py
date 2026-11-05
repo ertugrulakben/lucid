@@ -58,11 +58,14 @@ def _link_dir(link: Path, target: Path) -> None:
         ("screenshots", BROWSER_SHOT),
         ("proofs", PROOF),
         ("proofs", "20260101-000000-şifre_değiştir.png"),
+        ("journals", SESSION),
+        ("journals", SESSION + "-2"),
         ("schedule_logs", RUN_LOG),
+        ("schedule_logs", "20260101-000000-.log"),  # a task saved without a slug
     ],
 )
 def test_lucid_names_match_what_lucid_writes(folder: str, name: str) -> None:
-    assert LUCID_NAMES[folder].match(name)
+    assert LUCID_NAMES[folder].fullmatch(name)
 
 
 @pytest.mark.parametrize(
@@ -71,13 +74,17 @@ def test_lucid_names_match_what_lucid_writes(folder: str, name: str) -> None:
         ("screenshots", "Screenshot 2026-11-05 101010.png"),
         ("screenshots", "holiday.png"),
         ("screenshots", "1767225600000.jpg"),
+        ("screenshots", "١" * 13 + ".png"),  # Arabic-Indic digits are not Lucid's
+        ("screenshots", SHOT + "\n"),
         ("proofs", "proof.png"),
         ("schedule_logs", "lucid.log"),
         ("journals", "notes"),
+        ("journals", "20190101-120000-My Holiday Photos"),
+        ("journals", "20190101-120000-"),
     ],
 )
 def test_lucid_names_reject_foreign_names(folder: str, name: str) -> None:
-    assert not LUCID_NAMES[folder].match(name)
+    assert not LUCID_NAMES[folder].fullmatch(name)
 
 
 def test_prune_removes_old_lucid_files_only(tmp_path: Path) -> None:

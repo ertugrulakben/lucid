@@ -86,6 +86,29 @@ def test_prune_old_sessions_keeps_newest(tmp_path: Path) -> None:
     assert remaining == ["20260103-000000-demo", "20260104-000000-demo"]
 
 
+def test_session_cap_leaves_other_folders_alone(tmp_path: Path) -> None:
+    """journals/ can share a folder with the user's files: only Lucid's sessions count and go."""
+    journals_dir = tmp_path / "journals"
+    journals_dir.mkdir()
+    (journals_dir / "2019").mkdir()
+    (journals_dir / "2019" / "diary.txt").write_text("x", encoding="utf-8")
+    (journals_dir / "Archive").mkdir()
+    for name in ("20260101-000000-demo", "20260102-000000-demo", "20260103-000000-demo"):
+        (journals_dir / name).mkdir()
+    assert prune_old_sessions(journals_dir, keep=2) == 1
+    assert {p.name for p in journals_dir.iterdir()} == {
+        "2019",
+        "Archive",
+        "20260102-000000-demo",
+        "20260103-000000-demo",
+    }
+    assert (journals_dir / "2019" / "diary.txt").exists()
+    assert [p.name for p in iter_sessions(journals_dir)] == [
+        "20260103-000000-demo",
+        "20260102-000000-demo",
+    ]
+
+
 def test_iter_sessions_newest_first(tmp_path: Path) -> None:
     journals_dir = tmp_path / "journals"
     journals_dir.mkdir()

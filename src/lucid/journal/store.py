@@ -12,7 +12,9 @@ One session = one Execute run. Layout::
 
 ``index.jsonl`` is append-only, one JSON object per line. The store keeps
 ``settings.journal.max_sessions`` directories on disk, deleting the oldest
-sessions atomically when the cap is exceeded.
+sessions atomically when the cap is exceeded. Only folders named by
+:meth:`StepJournal.open_session` count as sessions; anything else in
+``journals/`` is neither listed nor deleted, and links are never followed.
 
 Typed text (``type``, ``type_text``, ``browser_fill``) is stored masked, length
 only, unless ``settings.journal.record_text`` is on: it can be a password.
@@ -24,6 +26,7 @@ import json
 import logging
 import re
 import shutil
+import stat
 import threading
 import time
 from pathlib import Path
@@ -31,7 +34,7 @@ from typing import Any, Iterator
 
 from PIL import Image
 
-from lucid.privacy import redact_params
+from lucid.privacy import LUCID_NAMES, is_link, redact_params
 
 from .models import StepRecord
 
@@ -162,11 +165,30 @@ class StepJournal:
             return None
 
 
+def _session_dirs(journals_dir: Path) -> list[Path]:
+    """Lucid's own session folders: named by ``open_session``, real folders, not links.
+
+    ``journals/`` can sit in a folder the user also uses (``data_dir`` is
+    configurable), so anything else there is left alone.
+    """
+    sessions = []
+    for path in journals_dir.iterdir():
+        if not LUCID_NAMES["journals"].fullmatch(path.name):
+            continue
+        try:
+            info = path.lstat()
+        except OSError:
+            continue
+        if stat.S_ISDIR(info.st_mode) and not is_link(info):
+            sessions.append(path)
+    return sessions
+
+
 def iter_sessions(journals_dir: Path) -> Iterator[Path]:
     """Yield session directories newest-first (by directory name, which is stamped)."""
     if not journals_dir.exists():
         return
-    entries = [p for p in journals_dir.iterdir() if p.is_dir()]
+    entries = _session_dirs(journals_dir)
     entries.sort(key=lambda p: p.name, reverse=True)
     yield from entries
 
@@ -191,13 +213,19 @@ def read_session(session_dir: Path) -> list[StepRecord]:
 
 
 def prune_old_sessions(journals_dir: Path, keep: int) -> int:
-    """Delete oldest sessions until at most ``keep`` remain. Returns count removed."""
+    """Delete oldest sessions until at most ``keep`` remain. Returns count removed.
+
+    Only Lucid's own session folders count and are deleted (``_session_dirs``);
+    a ``journals_dir`` that is itself a link is not entered.
+    """
     if keep <= 0 or not journals_dir.exists():
         return 0
-    sessions = sorted(
-        (p for p in journals_dir.iterdir() if p.is_dir()),
-        key=lambda p: p.name,
-    )
+    try:
+        if is_link(journals_dir.lstat()):
+            return 0
+    except OSError:
+        return 0
+    sessions = sorted(_session_dirs(journals_dir), key=lambda p: p.name)
     excess = len(sessions) - keep
     if excess <= 0:
         return 0
