@@ -9,6 +9,9 @@ Chromium tab without re-launching for every step.
 from __future__ import annotations
 
 import logging
+import os
+import re
+import time
 from pathlib import Path
 from typing import Literal, Optional, cast
 
@@ -65,7 +68,11 @@ class BrowserWaitParams(BaseModel):
 
 class BrowserScreenshotParams(BaseModel):
     full_page: bool = False
-    path: Optional[str] = None  # if set, save to disk under data/screenshots
+    # A file name only: the screenshot is always saved in settings.screenshot_dir
+    # as browser-<stamp>-<name>.png (see _screenshot_target).
+    path: Optional[str] = Field(
+        None, description="Optional file name, no folders; saved in the screenshots folder."
+    )
 
 
 class BrowserNoParams(BaseModel):
@@ -174,18 +181,52 @@ def browser_wait_for(ctx: ActionContext, params: BrowserWaitParams) -> str:
 )
 def browser_screenshot(ctx: ActionContext, params: BrowserScreenshotParams) -> str:
     runtime = _runtime(ctx)
+    screenshots = Path(ctx.settings.screenshot_dir)
+    screenshots.mkdir(parents=True, exist_ok=True)
+    target = _screenshot_target(screenshots, params.path, _stamp())
     page = runtime.page()
-    if params.path:
-        target = Path(params.path).expanduser().resolve()
-        target.parent.mkdir(parents=True, exist_ok=True)
-    else:
-        screenshots = ctx.settings.screenshot_dir if ctx.settings is not None else Path(".")
-        screenshots.mkdir(parents=True, exist_ok=True)
-        import time as _t
-
-        target = screenshots / f"browser-{_t.strftime('%Y%m%d-%H%M%S')}.png"
     page.screenshot(path=str(target), full_page=params.full_page)
     return f"screenshot saved: {target}"
+
+
+def _stamp() -> str:
+    return time.strftime("%Y%m%d-%H%M%S")
+
+
+# The page, and a prompt injection in it, can steer the model's ``path``: a
+# folder separator, a drive or alternate-data-stream colon, or a dot name is
+# refused outright, and the file name Lucid writes is rebuilt from safe
+# characters only.
+_UNSAFE_NAME = re.compile(r"[\\/:]")
+_NAME_RUN = re.compile(r"[^a-z0-9_-]+")
+
+
+def _screenshot_target(directory: Path, requested: Optional[str], stamp: str) -> Path:
+    """The new file browser_screenshot writes, always inside ``directory``.
+
+    ``requested`` (the model's ``path``) may only be a file name. Folders,
+    absolute paths, ``..``, drive letters, UNC paths and alternate data
+    streams raise ActionError before anything is written. The name becomes a
+    suffix of Lucid's own pattern, ``browser-<stamp>-<name>.png``, so
+    retention prunes it like every screenshot; an existing file or link is
+    never overwritten.
+    """
+    name = (requested or "").strip()
+    if name and (_UNSAFE_NAME.search(name) or name in (".", "..")):
+        raise ActionError(
+            f"browser_screenshot: path must be a plain file name, got {name!r}; "
+            f"screenshots are saved in {directory}"
+        )
+    slug = _NAME_RUN.sub("_", Path(name).stem.lower()).strip("_-")[:40] if name else ""
+    base = f"browser-{stamp}-{slug}" if slug else f"browser-{stamp}"
+    target = directory / f"{base}.png"
+    taken = 1
+    while os.path.lexists(target):
+        taken += 1
+        target = directory / f"{base}-{taken}.png"
+    if target.resolve().parent != directory.resolve():
+        raise ActionError(f"browser_screenshot: refusing to write outside {directory}")
+    return target
 
 
 @register_action(

@@ -103,8 +103,9 @@ def redact_params(action_name: str, params: Mapping[str, Any]) -> dict[str, Any]
 #: user's own files (``Pictures\Screenshots`` on Windows, where names are
 #: case-insensitive).
 LUCID_NAMES = {
-    # capture.screenshot.save_image (epoch milliseconds), browser_screenshot
-    "screenshots": re.compile(r"(?:[0-9]{13}|browser-[0-9]{8}-[0-9]{6})\.png"),
+    # capture.screenshot.save_image (epoch milliseconds); browser_screenshot
+    # (browser-<stamp>[-<name>][-N], see ops._screenshot_target)
+    "screenshots": re.compile(r"(?:[0-9]{13}|browser-[0-9]{8}-[0-9]{6}(?:-[a-z0-9_-]+)?)\.png"),
     # ExecuteMode._final_proof: <stamp>-<goal slug>.png; the slug is [\w-]
     "proofs": re.compile(r"[0-9]{8}-[0-9]{6}-[\w-]+\.png"),
     # StepJournal.open_session: <stamp>-<slug>[-n] folders; the slug is [a-z0-9_-]

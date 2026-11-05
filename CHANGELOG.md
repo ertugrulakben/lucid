@@ -37,6 +37,14 @@ All notable changes to Lucid are documented here. Format follows [Keep a Changel
   `Pictures`) keeps them, unless another program used the same naming. A
   folder that is itself a link is not pruned at all; a warning goes to
   `lucid.log`.
+- `browser_screenshot` saves only into the screenshots folder. It used its
+  `path` parameter as given, so a model steered by a web page (prompt
+  injection) could create folders and overwrite any file the user can write.
+  `path` is now a plain file name: one with a folder, a drive letter, a UNC
+  path, `..` or a `:` (alternate data stream) is refused with an error that
+  names the screenshots folder. The file is saved as
+  `browser-<time>-<name>.png`, so `screenshot.retention_hours` applies to it,
+  and an existing file or link is never overwritten.
 
 ### Changed
 
