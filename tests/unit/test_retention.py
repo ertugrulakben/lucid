@@ -79,6 +79,8 @@ def test_lucid_names_match_what_lucid_writes(folder: str, name: str) -> None:
         ("screenshots", "١" * 13 + ".png"),  # Arabic-Indic digits are not Lucid's
         ("screenshots", SHOT + "\n"),
         ("proofs", "proof.png"),
+        ("proofs", "20190101-120000-My Holiday Photo.png"),
+        ("proofs", "20190101-120000-a.b.png"),
         ("schedule_logs", "lucid.log"),
         ("journals", "notes"),
         ("journals", "20190101-120000-My Holiday Photos"),
@@ -104,9 +106,11 @@ def test_prune_removes_old_lucid_files_only(tmp_path: Path) -> None:
 
 
 def _spy_remove(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, bool]]:
-    """Record what pruning would delete (privacy._remove is its only deletion point)."""
+    """Record what pruning would delete (privacy.remove_entry is its only deletion point)."""
     calls: list[tuple[str, bool]] = []
-    monkeypatch.setattr(privacy, "_remove", lambda path, folder: calls.append((path.name, folder)))
+    monkeypatch.setattr(
+        privacy, "remove_entry", lambda path, folder: calls.append((path.name, folder))
+    )
     return calls
 
 
@@ -137,6 +141,17 @@ def test_prune_skips_entries_of_the_wrong_type(
     assert calls == []  # the type check stops them before any deletion is tried
     assert folder_named_like_a_shot.exists()
     assert file_named_like_a_session.exists()
+
+
+def test_prune_keeps_names_that_only_share_lucids_prefix(tmp_path: Path) -> None:
+    now = time.time()
+    backup = _make(tmp_path / (SHOT + ".bak"), 1000, now)
+    journals = tmp_path / "journals"
+    holiday = _make(journals / "20190101-120000-holiday photos", 1000, now, folder=True)
+    assert prune_older_than(tmp_path, 24, names=LUCID_NAMES["screenshots"], now=now) == 0
+    assert prune_older_than(journals, 24, names=LUCID_NAMES["journals"], folders=True, now=now) == 0
+    assert backup.exists()
+    assert holiday.exists()
 
 
 def test_prune_zero_keeps_everything(tmp_path: Path) -> None:

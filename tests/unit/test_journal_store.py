@@ -3,12 +3,29 @@
 from __future__ import annotations
 
 import json
+import os
+import sys
 from pathlib import Path
 
+import pytest
 from PIL import Image
 
+from lucid import privacy
 from lucid.journal import StepJournal, iter_sessions
 from lucid.journal.store import prune_old_sessions, read_session
+
+
+def _link_dir(link: Path, target: Path) -> None:
+    """A junction on Windows (no privilege needed), a symlink elsewhere; skips when not allowed."""
+    try:
+        if sys.platform == "win32":
+            import _winapi
+
+            _winapi.CreateJunction(str(target), str(link))
+        else:
+            os.symlink(target, link, target_is_directory=True)
+    except (OSError, ImportError, AttributeError) as exc:
+        pytest.skip(f"cannot create a directory link here: {exc}")
 
 
 def _img(color: tuple[int, int, int] = (10, 20, 30)) -> Image.Image:
@@ -107,6 +124,51 @@ def test_session_cap_leaves_other_folders_alone(tmp_path: Path) -> None:
         "20260103-000000-demo",
         "20260102-000000-demo",
     ]
+
+
+def test_session_cap_ignores_links_files_and_foreign_names(tmp_path: Path) -> None:
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "keep.txt").write_text("x", encoding="utf-8")
+    journals_dir = tmp_path / "journals"
+    journals_dir.mkdir()
+    _link_dir(journals_dir / "20190101-000000-linked", outside)
+    (journals_dir / "20190102-000000-file").write_text("x", encoding="utf-8")
+    (journals_dir / "20190103-120000-holiday photos").mkdir()  # shares the prefix only
+    for name in ("20260101-000000-a", "20260102-000000-b"):
+        (journals_dir / name).mkdir()
+    assert prune_old_sessions(journals_dir, keep=1) == 1
+    assert not (journals_dir / "20260101-000000-a").exists()
+    assert (journals_dir / "20190101-000000-linked").exists()
+    assert (journals_dir / "20190102-000000-file").exists()
+    assert (journals_dir / "20190103-120000-holiday photos").exists()
+    assert (outside / "keep.txt").exists()
+    assert [p.name for p in iter_sessions(journals_dir)] == ["20260102-000000-b"]
+
+
+def test_session_cap_does_not_enter_a_linked_journals_folder(tmp_path: Path) -> None:
+    real = tmp_path / "real"
+    real.mkdir()
+    for name in ("20260101-000000-a", "20260102-000000-b", "20260103-000000-c"):
+        (real / name).mkdir()
+    _link_dir(tmp_path / "journals", real)
+    assert prune_old_sessions(tmp_path / "journals", keep=1) == 0
+    assert len(list(real.iterdir())) == 3
+
+
+def test_session_cap_deletes_through_remove_entry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[tuple[str, bool]] = []
+    monkeypatch.setattr(
+        privacy, "remove_entry", lambda path, folder: calls.append((path.name, folder))
+    )
+    journals_dir = tmp_path / "journals"
+    journals_dir.mkdir()
+    for name in ("20260101-000000-a", "20260102-000000-b"):
+        (journals_dir / name).mkdir()
+    assert prune_old_sessions(journals_dir, keep=1) == 1
+    assert calls == [("20260101-000000-a", True)]
 
 
 def test_iter_sessions_newest_first(tmp_path: Path) -> None:

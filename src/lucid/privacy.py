@@ -105,8 +105,8 @@ def redact_params(action_name: str, params: Mapping[str, Any]) -> dict[str, Any]
 LUCID_NAMES = {
     # capture.screenshot.save_image (epoch milliseconds), browser_screenshot
     "screenshots": re.compile(r"(?:[0-9]{13}|browser-[0-9]{8}-[0-9]{6})\.png"),
-    # ExecuteMode._final_proof: <stamp>-<goal slug>.png
-    "proofs": re.compile(r"[0-9]{8}-[0-9]{6}-.+\.png"),
+    # ExecuteMode._final_proof: <stamp>-<goal slug>.png; the slug is [\w-]
+    "proofs": re.compile(r"[0-9]{8}-[0-9]{6}-[\w-]+\.png"),
     # StepJournal.open_session: <stamp>-<slug>[-n] folders; the slug is [a-z0-9_-]
     "journals": re.compile(r"[0-9]{8}-[0-9]{6}-[a-z0-9_-]+"),
     # scheduler daemon run logs: <stamp>-<task slug>.log; the slug may be empty
@@ -126,8 +126,9 @@ def is_link(info: os.stat_result) -> bool:
     return stat.S_ISLNK(info.st_mode) or bool(tag & _NAME_SURROGATE)
 
 
-def _remove(path: Path, folder: bool) -> None:
-    """Delete one expired entry; the single place pruning deletes from."""
+def remove_entry(path: Path, folder: bool) -> None:
+    """Delete one expired entry: the single place retention pruning and the
+    Step Gallery session cap delete from (the tests watch it)."""
     if folder:
         shutil.rmtree(path)
     else:
@@ -172,7 +173,7 @@ def prune_older_than(
                 continue
             if info.st_mtime >= limit:
                 continue
-            _remove(path, folders)
+            remove_entry(path, folders)
             removed += 1
         except OSError as exc:
             log.debug("retention: could not remove %s: %s", path.name, exc)

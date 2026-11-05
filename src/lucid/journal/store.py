@@ -25,7 +25,6 @@ from __future__ import annotations
 import json
 import logging
 import re
-import shutil
 import stat
 import threading
 import time
@@ -34,6 +33,7 @@ from typing import Any, Iterator
 
 from PIL import Image
 
+from lucid import privacy
 from lucid.privacy import LUCID_NAMES, is_link, redact_params
 
 from .models import StepRecord
@@ -232,7 +232,7 @@ def prune_old_sessions(journals_dir: Path, keep: int) -> int:
     removed = 0
     for path in sessions[:excess]:
         try:
-            shutil.rmtree(path)
+            privacy.remove_entry(path, True)
             removed += 1
         except OSError as exc:
             log.debug("could not remove old session %s: %s", path, exc)
