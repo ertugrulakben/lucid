@@ -44,8 +44,8 @@ All notable changes to Lucid are documented here. Format follows [Keep a Changel
   not depend on them. Lucid writes the full settings to `settings.yaml` the
   first time it starts, so an existing install still says
   `screenshot.persist: true` there: set it to `false` to get the new
-  behaviour. While it is on, Lucid shows a notice at start-up; it does not
-  rewrite your settings file.
+  behaviour. While it is on, the tray app shows a notice at start-up and
+  writes it to `lucid.log`; it does not rewrite your settings file.
 
 ### Fixed
 

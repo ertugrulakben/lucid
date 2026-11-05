@@ -123,4 +123,9 @@ tray-quit = Quit
 tray-settings-saved-title = Lucid — Settings saved
 tray-settings-saved-body = Backend changed. Quit and relaunch the tray to activate.
 tray-persist-on-title = Lucid: screenshots are kept on disk
-tray-persist-on-body = screenshot.persist is on, so every captured screen is saved as a PNG for { $hours } hours. Set it to false in settings.yaml to stop; it is off by default since 0.6.2.
+tray-persist-on-body =
+    { $hours ->
+        [0] screenshot.persist is on, so every captured screen is saved as a PNG and kept until you delete it. Set it to false in settings.yaml to stop; it is off by default since 0.6.2.
+        [one] screenshot.persist is on, so every captured screen is saved as a PNG for { $hours } hour. Set it to false in settings.yaml to stop; it is off by default since 0.6.2.
+       *[other] screenshot.persist is on, so every captured screen is saved as a PNG for { $hours } hours. Set it to false in settings.yaml to stop; it is off by default since 0.6.2.
+    }

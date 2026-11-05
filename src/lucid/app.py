@@ -515,16 +515,19 @@ def _notify_persist(tray: QSystemTrayIcon, settings: Settings) -> bool:
 
     0.6.2 turned ``screenshot.persist`` off by default, but Lucid writes the
     full settings on first start, so an install from an earlier version still
-    says ``true``. A notice leaves the user's settings file untouched.
+    says ``true``. A notice leaves the user's settings file untouched. The
+    warning always goes to the log; returns whether the tray showed it.
     """
     if not settings.screenshot.persist:
         return False
     log.warning(
         "screenshot.persist is on: every captured screen is kept in %s", settings.screenshot_dir
     )
+    if not tray.supportsMessages():
+        return False
     tray.showMessage(
         t("tray-persist-on-title"),
-        t("tray-persist-on-body", hours=settings.screenshot.retention_hours),
+        t("tray-persist-on-body", hours=max(0, settings.screenshot.retention_hours)),
         QSystemTrayIcon.MessageIcon.Information,
         10000,
     )

@@ -123,4 +123,8 @@ tray-quit = Çık
 tray-settings-saved-title = Lucid — Ayarlar kaydedildi
 tray-settings-saved-body = Backend değişti. Etkinleştirmek için tepsiden çıkıp yeniden başlatın.
 tray-persist-on-title = Lucid: ekran görüntüleri diskte tutuluyor
-tray-persist-on-body = screenshot.persist açık; yakalanan her ekran { $hours } saat PNG olarak saklanıyor. Durdurmak için settings.yaml dosyasında false yapın; 0.6.2'den beri varsayılan kapalı.
+tray-persist-on-body =
+    { $hours ->
+        [0] screenshot.persist açık; yakalanan her ekran PNG olarak siz silene kadar saklanıyor. Durdurmak için settings.yaml dosyasında false yapın; 0.6.2'den beri varsayılan kapalı.
+       *[other] screenshot.persist açık; yakalanan her ekran { $hours } saat PNG olarak saklanıyor. Durdurmak için settings.yaml dosyasında false yapın; 0.6.2'den beri varsayılan kapalı.
+    }

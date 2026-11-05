@@ -38,7 +38,7 @@ read-only, or the folder named by `LUCID_DATA_DIR`. `lucid status` prints it.
 | `settings.yaml` | data folder | Hotkey, provider, safety settings. No secrets. |
 | `install_id` | data folder | Random UUID used for opt-in telemetry. |
 | `logs\lucid.log` | data folder | Action names and parameters. Typed text is masked to its length; never prompt text, never screenshot bytes. |
-| Screenshots | data folder, `screenshots\` | PNG files of every captured screen while `screenshot.persist` is on. Off by default since 0.6.2; a `settings.yaml` written by an earlier version still says `true`, and Lucid then shows a notice at start-up. Deleted after `screenshot.retention_hours` (24). |
+| Screenshots | data folder, `screenshots\` | PNG files of every captured screen while `screenshot.persist` is on. Off by default since 0.6.2; a `settings.yaml` written by an earlier version still says `true`, and the tray app then shows a notice at start-up (also written to `lucid.log`). Deleted after `screenshot.retention_hours` (24). |
 | Proofs | data folder, `proofs\` | The final screenshot of each Execute run while `screenshot.save_proof` is on (the default). Deleted after `screenshot.proof_retention_hours` (24). |
 | Step Gallery | data folder, `journals\` | Before/after thumbnails of every Execute step and `index.jsonl` with the action parameters. Typed text, and MCP tool arguments named like a secret (password, token, API key, auth ...), are masked unless `journal.record_text` is on. The newest `journal.max_sessions` (30) are kept; `journal.retention_hours` (0, off) adds an age limit. |
 | Scheduled runs | data folder, `schedule_logs\` | Output of each scheduled run (typed text masked). Deleted after `scheduler.log_retention_days` (14). |
