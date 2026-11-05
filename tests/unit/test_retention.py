@@ -1,17 +1,29 @@
-"""Retention settings are enforced on the data folder (lucid.privacy.apply_retention)."""
+"""Retention settings are enforced on the data folder (lucid.privacy.apply_retention).
+
+Pruning removes only the files and folders Lucid named itself and never follows links:
+``data_dir`` can point at a folder that also holds the user's own files.
+"""
 
 from __future__ import annotations
 
 import os
+import sys
 import time
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from lucid.agent.execute_mode import ExecuteMode
 from lucid.config.settings import Settings
-from lucid.privacy import apply_retention, prune_older_than
+from lucid.privacy import LUCID_NAMES, apply_retention, prune_older_than
 
 HOUR = 3600.0
+SHOT = "1767225600000.png"  # capture.screenshot.save_image: epoch milliseconds
+BROWSER_SHOT = "browser-20260101-000000.png"
+PROOF = "20260101-000000-open_notepad.png"
+SESSION = "20260101-000000-open_notepad"
+RUN_LOG = "20260101-000000-nightly.log"
 
 
 def _make(path: Path, age_hours: float, now: float, *, folder: bool = False) -> Path:
@@ -26,37 +38,130 @@ def _make(path: Path, age_hours: float, now: float, *, folder: bool = False) -> 
     return path
 
 
-def test_prune_older_than_removes_old_files_and_folders(tmp_path: Path) -> None:
-    now = time.time()
-    old_file = _make(tmp_path / "old.png", 30, now)
-    old_dir = _make(tmp_path / "old-session", 30, now, folder=True)
-    new_file = _make(tmp_path / "new.png", 1, now)
-    assert prune_older_than(tmp_path, 24, now=now) == 2
-    assert not old_file.exists()
-    assert not old_dir.exists()
-    assert new_file.exists()
+def _link_dir(link: Path, target: Path) -> None:
+    """A junction on Windows (no privilege needed), a symlink elsewhere; skips when not allowed."""
+    try:
+        if sys.platform == "win32":
+            import _winapi
+
+            _winapi.CreateJunction(str(target), str(link))
+        else:
+            os.symlink(target, link, target_is_directory=True)
+    except (OSError, ImportError, AttributeError) as exc:
+        pytest.skip(f"cannot create a directory link here: {exc}")
 
 
-def test_prune_older_than_zero_keeps_everything(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "folder, name",
+    [
+        ("screenshots", SHOT),
+        ("screenshots", BROWSER_SHOT),
+        ("proofs", PROOF),
+        ("proofs", "20260101-000000-şifre_değiştir.png"),
+        ("schedule_logs", RUN_LOG),
+    ],
+)
+def test_lucid_names_match_what_lucid_writes(folder: str, name: str) -> None:
+    assert LUCID_NAMES[folder].match(name)
+
+
+@pytest.mark.parametrize(
+    "folder, name",
+    [
+        ("screenshots", "Screenshot 2026-11-05 101010.png"),
+        ("screenshots", "holiday.png"),
+        ("screenshots", "1767225600000.jpg"),
+        ("proofs", "proof.png"),
+        ("schedule_logs", "lucid.log"),
+        ("journals", "notes"),
+    ],
+)
+def test_lucid_names_reject_foreign_names(folder: str, name: str) -> None:
+    assert not LUCID_NAMES[folder].match(name)
+
+
+def test_prune_removes_old_lucid_files_only(tmp_path: Path) -> None:
     now = time.time()
-    old = _make(tmp_path / "old.png", 1000, now)
-    assert prune_older_than(tmp_path, 0, now=now) == 0
+    old = _make(tmp_path / SHOT, 30, now)
+    new = _make(tmp_path / "1767225700000.png", 1, now)
+    foreign = _make(tmp_path / "Screenshot (1).png", 1000, now)
+    foreign_dir = _make(tmp_path / "Holiday", 1000, now, folder=True)
+    removed = prune_older_than(tmp_path, 24, names=LUCID_NAMES["screenshots"], now=now)
+    assert removed == 1
+    assert not old.exists()
+    assert new.exists()
+    assert foreign.exists()
+    assert foreign_dir.exists()
+
+
+def test_prune_skips_entries_of_the_wrong_type(tmp_path: Path) -> None:
+    now = time.time()
+    folder_named_like_a_shot = _make(tmp_path / SHOT, 30, now, folder=True)
+    file_named_like_a_session = _make(tmp_path / "journals" / SESSION, 30, now)
+    assert prune_older_than(tmp_path, 24, names=LUCID_NAMES["screenshots"], now=now) == 0
+    assert folder_named_like_a_shot.exists()
+    journals = tmp_path / "journals"
+    assert prune_older_than(journals, 24, names=LUCID_NAMES["journals"], folders=True, now=now) == 0
+    assert file_named_like_a_session.exists()
+
+
+def test_prune_zero_keeps_everything(tmp_path: Path) -> None:
+    now = time.time()
+    old = _make(tmp_path / SHOT, 1000, now)
+    assert prune_older_than(tmp_path, 0, names=LUCID_NAMES["screenshots"], now=now) == 0
     assert old.exists()
 
 
-def test_prune_older_than_missing_folder(tmp_path: Path) -> None:
-    assert prune_older_than(tmp_path / "missing", 24) == 0
+def test_prune_missing_folder(tmp_path: Path) -> None:
+    assert prune_older_than(tmp_path / "missing", 24, names=LUCID_NAMES["screenshots"]) == 0
+
+
+def test_prune_never_follows_or_removes_a_linked_entry(tmp_path: Path) -> None:
+    outside = tmp_path / "outside"
+    keep = _make(outside / "important.txt", 1000, time.time())
+    journals = tmp_path / "journals"
+    journals.mkdir()
+    _link_dir(journals / SESSION, outside)
+    later = time.time() + 1000 * HOUR  # old enough by age: only the link rule protects it
+    assert (
+        prune_older_than(journals, 24, names=LUCID_NAMES["journals"], folders=True, now=later) == 0
+    )
+    assert (journals / SESSION).exists()
+    assert keep.exists()
+
+
+def test_prune_does_not_enter_a_linked_folder(tmp_path: Path) -> None:
+    outside = tmp_path / "outside"
+    shot = _make(outside / SHOT, 1000, time.time())
+    _link_dir(tmp_path / "screenshots", outside)
+    later = time.time() + 1000 * HOUR
+    pattern = LUCID_NAMES["screenshots"]
+    assert prune_older_than(tmp_path / "screenshots", 24, names=pattern, now=later) == 0
+    assert shot.exists()
+
+
+def test_data_dir_in_the_users_pictures_folder(tmp_path: Path) -> None:
+    """data_dir set to Pictures: screenshots/ is the user's own Screenshots folder."""
+    now = time.time()
+    pictures = tmp_path / "Pictures"
+    settings = Settings(data_dir=pictures)
+    users_own = _make(settings.screenshot_dir / "Screenshot 2026-01-01 090000.png", 1000, now)
+    lucids = _make(settings.screenshot_dir / SHOT, 25, now)
+    removed = apply_retention(settings, now=now)
+    assert removed["screenshots"] == 1
+    assert users_own.exists()
+    assert not lucids.exists()
 
 
 def test_apply_retention_uses_each_setting(tmp_path: Path) -> None:
     now = time.time()
     settings = Settings(data_dir=tmp_path)
-    shot_old = _make(settings.screenshot_dir / "1.png", 25, now)
-    shot_new = _make(settings.screenshot_dir / "2.png", 23, now)
-    proof_old = _make(tmp_path / "proofs" / "p.png", 25, now)
-    journal_old = _make(settings.journals_dir / "20260101-000000-demo", 1000, now, folder=True)
-    log_old = _make(tmp_path / "schedule_logs" / "a.log", 15 * 24, now)
-    log_new = _make(tmp_path / "schedule_logs" / "b.log", 13 * 24, now)
+    shot_old = _make(settings.screenshot_dir / SHOT, 25, now)
+    shot_new = _make(settings.screenshot_dir / BROWSER_SHOT, 23, now)
+    proof_old = _make(tmp_path / "proofs" / PROOF, 25, now)
+    journal_old = _make(settings.journals_dir / SESSION, 1000, now, folder=True)
+    log_old = _make(tmp_path / "schedule_logs" / RUN_LOG, 15 * 24, now)
+    log_new = _make(tmp_path / "schedule_logs" / "20260102-000000-nightly.log", 13 * 24, now)
     removed = apply_retention(settings, now=now)
     assert removed == {"screenshots": 1, "proofs": 1, "journals": 0, "schedule_logs": 1}
     assert not shot_old.exists()
@@ -72,8 +177,8 @@ def test_proofs_have_their_own_retention(tmp_path: Path) -> None:
     settings = Settings(data_dir=tmp_path)
     settings.screenshot.retention_hours = 1
     settings.screenshot.proof_retention_hours = 48
-    shot = _make(settings.screenshot_dir / "1.png", 2, now)
-    proof = _make(tmp_path / "proofs" / "p.png", 25, now)
+    shot = _make(settings.screenshot_dir / SHOT, 2, now)
+    proof = _make(tmp_path / "proofs" / PROOF, 25, now)
     removed = apply_retention(settings, now=now)
     assert (removed["screenshots"], removed["proofs"]) == (1, 0)
     assert not shot.exists()
@@ -84,8 +189,8 @@ def test_journal_retention_hours_opt_in(tmp_path: Path) -> None:
     now = time.time()
     settings = Settings(data_dir=tmp_path)
     settings.journal.retention_hours = 48
-    old = _make(settings.journals_dir / "20260101-000000-demo", 49, now, folder=True)
-    new = _make(settings.journals_dir / "20260102-000000-demo", 47, now, folder=True)
+    old = _make(settings.journals_dir / SESSION, 49, now, folder=True)
+    new = _make(settings.journals_dir / "20260102-000000-open_notepad", 47, now, folder=True)
     assert apply_retention(settings, now=now)["journals"] == 1
     assert not old.exists()
     assert new.exists()
@@ -93,6 +198,6 @@ def test_journal_retention_hours_opt_in(tmp_path: Path) -> None:
 
 def test_execute_retention_pass_uses_run_settings(tmp_path: Path) -> None:
     settings = Settings(data_dir=tmp_path)
-    old = _make(settings.screenshot_dir / "old.png", 25, time.time())
+    old = _make(settings.screenshot_dir / SHOT, 25, time.time())
     ExecuteMode._apply_retention(SimpleNamespace(settings=settings))
     assert not old.exists()

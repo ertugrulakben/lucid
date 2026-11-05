@@ -13,14 +13,17 @@ way, nested objects included.
 debugging. The log file and the overlay always show the masked form.
 
 The retention settings are enforced here as well (:func:`apply_retention`), at
-app start and before every Execute run.
+app start and before every Execute run. Pruning removes only what Lucid named
+itself and never follows links.
 """
 
 from __future__ import annotations
 
 import logging
+import os
 import re
 import shutil
+import stat
 import time
 from collections.abc import Mapping
 from pathlib import Path
@@ -94,26 +97,65 @@ def redact_params(action_name: str, params: Mapping[str, Any]) -> dict[str, Any]
     return out
 
 
-def prune_older_than(directory: Path, max_age_hours: float, *, now: float | None = None) -> int:
-    """Delete the files and folders in ``directory`` last modified over ``max_age_hours`` ago.
+#: The names Lucid gives what it writes in each folder it prunes. Anything else
+#: in those folders is left alone: ``data_dir`` is user-configurable and can
+#: share a folder with the user's own files (``Pictures\Screenshots`` on
+#: Windows, where names are case-insensitive).
+LUCID_NAMES = {
+    # capture.screenshot.save_image, browser_screenshot
+    "screenshots": re.compile(r"^(?:\d{13}|browser-\d{8}-\d{6})\.png$"),
+    # ExecuteMode._final_proof
+    "proofs": re.compile(r"^\d{8}-\d{6}-.+\.png$"),
+    # StepJournal.open_session (folders)
+    "journals": re.compile(r"^\d{8}-\d{6}-"),
+    # scheduler.daemon run logs
+    "schedule_logs": re.compile(r"^\d{8}-\d{6}-.+\.log$"),
+}
 
-    ``max_age_hours <= 0`` keeps everything. An entry that cannot be removed
-    (in use, no permission) is skipped and retried on the next pass. Returns
-    the number of entries removed.
+
+def _is_link(info: os.stat_result) -> bool:
+    """A symlink, or on Windows any reparse point (junctions included)."""
+    reparse = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+    return stat.S_ISLNK(info.st_mode) or bool(getattr(info, "st_file_attributes", 0) & reparse)
+
+
+def prune_older_than(
+    directory: Path,
+    max_age_hours: float,
+    *,
+    names: re.Pattern[str],
+    folders: bool = False,
+    now: float | None = None,
+) -> int:
+    """Delete what Lucid wrote in ``directory`` more than ``max_age_hours`` ago.
+
+    Only entries whose name matches ``names`` and whose type matches
+    ``folders`` (folders for journals, files elsewhere) are candidates. Links
+    are never followed or removed, and a ``directory`` that is itself a link is
+    not entered. ``max_age_hours <= 0`` keeps everything. An entry that cannot
+    be removed (in use, no permission) is retried on the next pass. Returns the
+    number of entries removed.
     """
     if max_age_hours <= 0:
         return 0
     limit = (time.time() if now is None else now) - max_age_hours * 3600
     try:
+        if _is_link(directory.lstat()):
+            return 0
         entries = list(directory.iterdir())
     except OSError:
         return 0
     removed = 0
     for path in entries:
+        if not names.match(path.name):
+            continue
         try:
-            if path.stat().st_mtime >= limit:
+            info = path.lstat()
+            if _is_link(info) or stat.S_ISDIR(info.st_mode) != folders:
                 continue
-            if path.is_dir():
+            if info.st_mtime >= limit:
+                continue
+            if folders:
                 shutil.rmtree(path)
             else:
                 path.unlink()
@@ -133,9 +175,16 @@ def apply_retention(settings: Settings, *, now: float | None = None) -> dict[str
     """
     data_dir = settings.data_dir
     plan = {
-        "screenshots": (settings.screenshot_dir, settings.screenshot.retention_hours),
-        "proofs": (data_dir / "proofs", settings.screenshot.proof_retention_hours),
-        "journals": (settings.journals_dir, settings.journal.retention_hours),
-        "schedule_logs": (data_dir / "schedule_logs", settings.scheduler.log_retention_days * 24),
+        "screenshots": (settings.screenshot_dir, settings.screenshot.retention_hours, False),
+        "proofs": (data_dir / "proofs", settings.screenshot.proof_retention_hours, False),
+        "journals": (settings.journals_dir, settings.journal.retention_hours, True),
+        "schedule_logs": (
+            data_dir / "schedule_logs",
+            settings.scheduler.log_retention_days * 24,
+            False,
+        ),
     }
-    return {name: prune_older_than(path, hours, now=now) for name, (path, hours) in plan.items()}
+    return {
+        name: prune_older_than(path, hours, names=LUCID_NAMES[name], folders=folders, now=now)
+        for name, (path, hours, folders) in plan.items()
+    }

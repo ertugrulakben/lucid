@@ -46,7 +46,10 @@ read-only, or the folder named by `LUCID_DATA_DIR`. `lucid status` prints it.
 | Workflows | data folder, `workflows\` | Teach-mode JSON files, including the characters typed while recording. Stays local unless you export. |
 
 Retention is enforced when Lucid starts and before every Execute run. A value
-of 0 keeps that folder as it is.
+of 0 keeps that folder as it is. Only files and folders Lucid named itself are
+deleted (for example `1767225600000.png` in `screenshots\`), and links
+(symlinks, junctions) are never followed, so a data folder that also holds
+your own files is safe.
 
 ## Clipboard
 
