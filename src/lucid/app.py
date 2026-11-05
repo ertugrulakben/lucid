@@ -510,6 +510,27 @@ def _setup_logging(settings: Settings) -> None:
     )
 
 
+def _notify_persist(tray: QSystemTrayIcon, settings: Settings) -> bool:
+    """Tell the user once per start that every captured screen is being kept.
+
+    0.6.2 turned ``screenshot.persist`` off by default, but Lucid writes the
+    full settings on first start, so an install from an earlier version still
+    says ``true``. A notice leaves the user's settings file untouched.
+    """
+    if not settings.screenshot.persist:
+        return False
+    log.warning(
+        "screenshot.persist is on: every captured screen is kept in %s", settings.screenshot_dir
+    )
+    tray.showMessage(
+        t("tray-persist-on-title"),
+        t("tray-persist-on-body", hours=settings.screenshot.retention_hours),
+        QSystemTrayIcon.MessageIcon.Information,
+        10000,
+    )
+    return True
+
+
 def run_app() -> int:
     settings = get_settings()
     _setup_logging(settings)
@@ -527,7 +548,7 @@ def run_app() -> int:
 
     controller = AppController(settings)
     tray = _install_tray(app, controller)
-    _ = tray
+    _notify_persist(tray, settings)
 
     signal.signal(signal.SIGINT, lambda *_: app.quit())
 
