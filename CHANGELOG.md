@@ -30,10 +30,11 @@ All notable changes to Lucid are documented here. Format follows [Keep a Changel
 - `screenshot.retention_hours` (screenshots), `screenshot.proof_retention_hours`
   (proofs) and `scheduler.log_retention_days` are now enforced, at start-up
   and before every Execute run. The new `journal.retention_hours` (0, off, by
-  default) adds an age limit to the Step Gallery. Pruning deletes only the
-  files and folders Lucid named itself and never follows symlinks or
-  junctions, so a `data_dir` that shares a folder with the user's own files
-  (say `Pictures`) loses nothing but Lucid's output.
+  default) adds an age limit to the Step Gallery. Pruning, and the Step
+  Gallery's session cap, delete only entries named the way Lucid names its
+  output and never follow or remove symlinks or junctions, so a `data_dir`
+  that shares a folder with the user's own files (say `Pictures`) keeps them,
+  unless another program used the same naming.
 
 ### Changed
 

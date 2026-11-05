@@ -114,10 +114,24 @@ LUCID_NAMES = {
 }
 
 
+#: IsReparseTagNameSurrogate (winnt.h): the reparse point names another file or
+#: folder (symlinks, junctions, mount points). Other reparse points, such as
+#: cloud-file placeholders, are ordinary entries for pruning.
+_NAME_SURROGATE = 0x20000000
+
+
 def is_link(info: os.stat_result) -> bool:
-    """A symlink, or on Windows any reparse point (junctions included)."""
-    reparse = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
-    return stat.S_ISLNK(info.st_mode) or bool(getattr(info, "st_file_attributes", 0) & reparse)
+    """A symlink, or on Windows a name-surrogate reparse point (junctions included)."""
+    tag = getattr(info, "st_reparse_tag", 0)
+    return stat.S_ISLNK(info.st_mode) or bool(tag & _NAME_SURROGATE)
+
+
+def _remove(path: Path, folder: bool) -> None:
+    """Delete one expired entry; the single place pruning deletes from."""
+    if folder:
+        shutil.rmtree(path)
+    else:
+        path.unlink()
 
 
 def prune_older_than(
@@ -135,7 +149,9 @@ def prune_older_than(
     are never followed or removed, and a ``directory`` that is itself a link is
     not entered. ``max_age_hours <= 0`` keeps everything. An entry that cannot
     be removed (in use, no permission) is retried on the next pass. Returns the
-    number of entries removed.
+    number of entries removed. The checks guard against mistakes, not against
+    another program swapping an entry for a link between the check and the
+    deletion.
     """
     if max_age_hours <= 0:
         return 0
@@ -156,10 +172,7 @@ def prune_older_than(
                 continue
             if info.st_mtime >= limit:
                 continue
-            if folders:
-                shutil.rmtree(path)
-            else:
-                path.unlink()
+            _remove(path, folders)
             removed += 1
         except OSError as exc:
             log.debug("retention: could not remove %s: %s", path.name, exc)
