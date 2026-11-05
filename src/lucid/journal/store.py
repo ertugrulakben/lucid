@@ -14,7 +14,9 @@ One session = one Execute run. Layout::
 ``settings.journal.max_sessions`` directories on disk, deleting the oldest
 sessions atomically when the cap is exceeded. Only folders named by
 :meth:`StepJournal.open_session` count as sessions; anything else in
-``journals/`` is neither listed nor deleted, and links are never followed.
+``journals/`` is neither listed nor deleted, and links are never followed
+when pruning. A ``journals/`` that is itself a link is not pruned (a warning
+goes to the log).
 
 Typed text (``type``, ``type_text``, ``browser_fill``) is stored masked, length
 only, unless ``settings.journal.record_text`` is on: it can be a password.
@@ -216,12 +218,14 @@ def prune_old_sessions(journals_dir: Path, keep: int) -> int:
     """Delete oldest sessions until at most ``keep`` remain. Returns count removed.
 
     Only Lucid's own session folders count and are deleted (``_session_dirs``);
-    a ``journals_dir`` that is itself a link is not entered.
+    a ``journals_dir`` that is itself a link is not entered, and a warning goes
+    to the log.
     """
     if keep <= 0 or not journals_dir.exists():
         return 0
     try:
         if is_link(journals_dir.lstat()):
+            log.warning("journal: %s is a link, so the session cap does not apply", journals_dir)
             return 0
     except OSError:
         return 0

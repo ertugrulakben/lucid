@@ -6,6 +6,7 @@ Pruning removes only the files and folders Lucid named itself and never follows 
 
 from __future__ import annotations
 
+import logging
 import os
 import stat
 import sys
@@ -201,14 +202,18 @@ def test_prune_does_not_remove_a_file_symlink(
     assert target.exists()
 
 
-def test_prune_does_not_enter_a_linked_folder(tmp_path: Path) -> None:
+def test_prune_does_not_enter_a_linked_folder(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
     outside = tmp_path / "outside"
     shot = _make(outside / SHOT, 1000, time.time())
     _link_dir(tmp_path / "screenshots", outside)
     later = time.time() + 1000 * HOUR
     pattern = LUCID_NAMES["screenshots"]
-    assert prune_older_than(tmp_path / "screenshots", 24, names=pattern, now=later) == 0
+    with caplog.at_level(logging.WARNING, logger="lucid.privacy"):
+        assert prune_older_than(tmp_path / "screenshots", 24, names=pattern, now=later) == 0
     assert shot.exists()
+    assert "is a link, so it is not pruned" in caplog.text
 
 
 def test_data_dir_in_the_users_pictures_folder(tmp_path: Path) -> None:

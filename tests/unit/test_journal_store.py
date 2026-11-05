@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sys
 from pathlib import Path
@@ -146,14 +147,18 @@ def test_session_cap_ignores_links_files_and_foreign_names(tmp_path: Path) -> No
     assert [p.name for p in iter_sessions(journals_dir)] == ["20260102-000000-b"]
 
 
-def test_session_cap_does_not_enter_a_linked_journals_folder(tmp_path: Path) -> None:
+def test_session_cap_does_not_enter_a_linked_journals_folder(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
     real = tmp_path / "real"
     real.mkdir()
     for name in ("20260101-000000-a", "20260102-000000-b", "20260103-000000-c"):
         (real / name).mkdir()
     _link_dir(tmp_path / "journals", real)
-    assert prune_old_sessions(tmp_path / "journals", keep=1) == 0
+    with caplog.at_level(logging.WARNING, logger="lucid.journal"):
+        assert prune_old_sessions(tmp_path / "journals", keep=1) == 0
     assert len(list(real.iterdir())) == 3
+    assert "the session cap does not apply" in caplog.text
 
 
 def test_session_cap_deletes_through_remove_entry(

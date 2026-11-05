@@ -32,9 +32,11 @@ All notable changes to Lucid are documented here. Format follows [Keep a Changel
   and before every Execute run. The new `journal.retention_hours` (0, off, by
   default) adds an age limit to the Step Gallery. Pruning, and the Step
   Gallery's session cap, delete only entries named the way Lucid names its
-  output and never follow or remove symlinks or junctions, so a `data_dir`
-  that shares a folder with the user's own files (say `Pictures`) keeps them,
-  unless another program used the same naming.
+  output and never follow symlinks or junctions or remove them from these
+  folders, so a `data_dir` that shares a folder with the user's own files (say
+  `Pictures`) keeps them, unless another program used the same naming. A
+  folder that is itself a link is not pruned at all; a warning goes to
+  `lucid.log`.
 
 ### Changed
 

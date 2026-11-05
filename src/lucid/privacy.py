@@ -147,8 +147,10 @@ def prune_older_than(
 
     Only entries whose whole name matches ``names`` and whose type matches
     ``folders`` (folders for journals, files elsewhere) are candidates. Links
-    are never followed or removed, and a ``directory`` that is itself a link is
-    not entered. ``max_age_hours <= 0`` keeps everything. An entry that cannot
+    in ``directory`` are never followed or removed (a link inside an expired
+    session folder goes with that folder, its target untouched), and a
+    ``directory`` that is itself a link is not pruned at all; a warning goes to
+    the log. ``max_age_hours <= 0`` keeps everything. An entry that cannot
     be removed (in use, no permission) is retried on the next pass. Returns the
     number of entries removed. The checks guard against mistakes, not against
     another program swapping an entry for a link between the check and the
@@ -159,6 +161,7 @@ def prune_older_than(
     limit = (time.time() if now is None else now) - max_age_hours * 3600
     try:
         if is_link(directory.lstat()):
+            log.warning("retention: %s is a link, so it is not pruned", directory)
             return 0
         entries = list(directory.iterdir())
     except OSError:

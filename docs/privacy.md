@@ -48,8 +48,12 @@ read-only, or the folder named by `LUCID_DATA_DIR`. `lucid status` prints it.
 Retention is enforced when Lucid starts and before every Execute run. A value
 of 0 keeps that folder as it is. Only entries named the way Lucid names its
 output are deleted (for example `1767225600000.png` in `screenshots\`), and
-links (symlinks, junctions) are never followed or removed. Your own files in
-a shared data folder stay, unless another program named a file the same way.
+links (symlinks, junctions) in these folders are never followed or removed;
+a link inside an expired Lucid session folder goes with the folder, its
+target untouched. If one of these folders is itself a link, Lucid does not
+prune it at all (no age limit, no session cap) and writes a warning to
+`lucid.log`. Your own files in a shared data folder stay, unless another
+program named a file the same way.
 
 ## Clipboard
 
