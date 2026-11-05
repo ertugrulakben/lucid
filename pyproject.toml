@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lucid"
-version = "0.6.1"
+version = "0.6.2"
 description = "Spotlight-style desktop AI assistant with vision, teach, and autonomous control modes"
 readme = "README.md"
 license = { file = "LICENSE" }
